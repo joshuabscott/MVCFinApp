@@ -47,6 +47,24 @@ namespace MVCFinApp.Areas.Identity.Pages.Account
         public class InputModel
         {
             [Required]
+            [StringLength(30)]
+            public string FirstName { get; set; }
+
+            [Required]
+            [StringLength(30)]
+            public string LastName { get; set; }
+
+            [Display(Name = "Full Name")]
+            [NotMapped]
+            public string FullName { get { return $"{FirstName} {LastName}"; } }
+
+            [Display(Name = "Avatar")]
+            [MaxFileSize(2 * 1024 * 1024)]
+            public string ImagePath { get; set; }
+            public byte[] ImageData { get; set; }
+
+
+            [Required]
             [EmailAddress]
             [Display(Name = "Email")]
             public string Email { get; set; }
