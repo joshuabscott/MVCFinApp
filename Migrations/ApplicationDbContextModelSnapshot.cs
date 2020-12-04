@@ -19,6 +19,130 @@ namespace MVCFinApp.Migrations
                 .HasAnnotation("ProductVersion", "3.1.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            modelBuilder.Entity("MVCFinApp.Models.Attachment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<string>("ContentType")
+                        .HasColumnType("character varying(50)")
+                        .HasMaxLength(50);
+
+                    b.Property<string>("Description")
+                        .HasColumnType("character varying(50)")
+                        .HasMaxLength(50);
+
+                    b.Property<byte[]>("FileData")
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("character varying(30)")
+                        .HasMaxLength(30);
+
+                    b.Property<int>("HouseHoldId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HouseHoldId");
+
+                    b.ToTable("Attachment");
+                });
+
+            modelBuilder.Entity("MVCFinApp.Models.BankAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<decimal>("CurrentBalance")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("FPUserId")
+                        .HasColumnType("character varying(30)")
+                        .HasMaxLength(30);
+
+                    b.Property<int>("HouseHoldId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("character varying(30)")
+                        .HasMaxLength(30);
+
+                    b.Property<decimal>("StartingBalance")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FPUserId");
+
+                    b.HasIndex("HouseHoldId");
+
+                    b.ToTable("BankAccount");
+                });
+
+            modelBuilder.Entity("MVCFinApp.Models.Category", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<string>("Description")
+                        .HasColumnType("character varying(50)")
+                        .HasMaxLength(50);
+
+                    b.Property<int>("HouseHoldId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("character varying(30)")
+                        .HasMaxLength(30);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HouseHoldId");
+
+                    b.ToTable("Category");
+                });
+
+            modelBuilder.Entity("MVCFinApp.Models.CategoryItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<decimal>("ActualAmount")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("character varying(50)")
+                        .HasMaxLength(50);
+
+                    b.Property<string>("Name")
+                        .HasColumnType("character varying(30)")
+                        .HasMaxLength(30);
+
+                    b.Property<decimal>("TargetAmount")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("CategoryItem");
+                });
+
             modelBuilder.Entity("MVCFinApp.Models.FAUser", b =>
                 {
                     b.Property<string>("Id")
@@ -37,6 +161,25 @@ namespace MVCFinApp.Migrations
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
+
+                    b.Property<byte[]>("FileData")
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("character varying(30)")
+                        .HasMaxLength(30);
+
+                    b.Property<int>("HouseHoldId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("character varying(30)")
+                        .HasMaxLength(30);
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
@@ -73,6 +216,8 @@ namespace MVCFinApp.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("HouseHoldId");
+
                     b.HasIndex("NormalizedEmail")
                         .HasName("EmailIndex");
 
@@ -81,6 +226,146 @@ namespace MVCFinApp.Migrations
                         .HasName("UserNameIndex");
 
                     b.ToTable("AspNetUsers");
+                });
+
+            modelBuilder.Entity("MVCFinApp.Models.HouseHold", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<DateTime>("Established")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Greeting")
+                        .HasColumnType("character varying(50)")
+                        .HasMaxLength(50);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("character varying(30)")
+                        .HasMaxLength(30);
+
+                    b.HasKey("Id");
+
+                    b.ToTable("HouseHold");
+                });
+
+            modelBuilder.Entity("MVCFinApp.Models.Invitation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<bool>("Accepted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Body")
+                        .HasColumnType("character varying(100)")
+                        .HasMaxLength(100);
+
+                    b.Property<Guid>("Code")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("EmailTo")
+                        .HasColumnType("character varying(50)")
+                        .HasMaxLength(50);
+
+                    b.Property<DateTime>("Expires")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("HouseHoldId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Subject")
+                        .HasColumnType("character varying(50)")
+                        .HasMaxLength(50);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HouseHoldId");
+
+                    b.ToTable("Invitation");
+                });
+
+            modelBuilder.Entity("MVCFinApp.Models.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<string>("Body")
+                        .HasColumnType("character varying(100)")
+                        .HasMaxLength(100);
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("HouseHoldId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Subject")
+                        .HasColumnType("character varying(30)")
+                        .HasMaxLength(30);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HouseHoldId");
+
+                    b.ToTable("Notification");
+                });
+
+            modelBuilder.Entity("MVCFinApp.Models.Transaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("BankAccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CategoryItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("FAUserId")
+                        .HasColumnType("character varying(30)")
+                        .HasMaxLength(30);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Memo")
+                        .HasColumnType("character varying(100)")
+                        .HasMaxLength(100);
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BankAccountId");
+
+                    b.HasIndex("CategoryItemId");
+
+                    b.HasIndex("FAUserId");
+
+                    b.ToTable("Transaction");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -211,6 +496,90 @@ namespace MVCFinApp.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens");
+                });
+
+            modelBuilder.Entity("MVCFinApp.Models.Attachment", b =>
+                {
+                    b.HasOne("MVCFinApp.Models.HouseHold", "HouseHold")
+                        .WithMany("Attachments")
+                        .HasForeignKey("HouseHoldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MVCFinApp.Models.BankAccount", b =>
+                {
+                    b.HasOne("MVCFinApp.Models.FAUser", "FPUser")
+                        .WithMany("BankAccounts")
+                        .HasForeignKey("FPUserId");
+
+                    b.HasOne("MVCFinApp.Models.HouseHold", "HouseHold")
+                        .WithMany("BankAccounts")
+                        .HasForeignKey("HouseHoldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MVCFinApp.Models.Category", b =>
+                {
+                    b.HasOne("MVCFinApp.Models.HouseHold", "HouseHold")
+                        .WithMany("Categories")
+                        .HasForeignKey("HouseHoldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MVCFinApp.Models.CategoryItem", b =>
+                {
+                    b.HasOne("MVCFinApp.Models.Category", "Category")
+                        .WithMany("CategoryItems")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MVCFinApp.Models.FAUser", b =>
+                {
+                    b.HasOne("MVCFinApp.Models.HouseHold", "HouseHold")
+                        .WithMany("FAUsers")
+                        .HasForeignKey("HouseHoldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MVCFinApp.Models.Invitation", b =>
+                {
+                    b.HasOne("MVCFinApp.Models.HouseHold", "HouseHold")
+                        .WithMany("Invitations")
+                        .HasForeignKey("HouseHoldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MVCFinApp.Models.Notification", b =>
+                {
+                    b.HasOne("MVCFinApp.Models.HouseHold", "HouseHold")
+                        .WithMany("Notifications")
+                        .HasForeignKey("HouseHoldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MVCFinApp.Models.Transaction", b =>
+                {
+                    b.HasOne("MVCFinApp.Models.BankAccount", "BankAccount")
+                        .WithMany("Transactions")
+                        .HasForeignKey("BankAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MVCFinApp.Models.CategoryItem", "CategoryItem")
+                        .WithMany("Transactions")
+                        .HasForeignKey("CategoryItemId");
+
+                    b.HasOne("MVCFinApp.Models.FAUser", "FAUser")
+                        .WithMany("Transactions")
+                        .HasForeignKey("FAUserId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

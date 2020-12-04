@@ -1,19 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using MVCFinApp.Data;
 using MVCFinApp.Models;
+using MVCFinApp.Extensions;
+using MVCFinApp.Services;
+using static MVCFinApp.Extensions.CustomAttributes;
+using static MVCFinApp.Data.ContextSeed;
+using MVCFinApp.Data.Enums;
 
 namespace MVCFinApp.Areas.Identity.Pages.Account
 {
@@ -24,17 +32,20 @@ namespace MVCFinApp.Areas.Identity.Pages.Account
         private readonly UserManager<FAUser> _userManager;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly IAvatarService _avatarService;
 
         public RegisterModel(
             UserManager<FAUser> userManager,
             SignInManager<FAUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            IAvatarService avatarService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _avatarService = avatarService;
         }
 
         [BindProperty]
@@ -47,22 +58,19 @@ namespace MVCFinApp.Areas.Identity.Pages.Account
         public class InputModel
         {
             [Required]
-            [StringLength(30)]
+            [Display(Name = "First Name")]
             public string FirstName { get; set; }
 
             [Required]
-            [StringLength(30)]
+            [Display(Name = "Last Name")]
             public string LastName { get; set; }
 
-            [Display(Name = "Full Name")]
-            [NotMapped]
-            public string FullName { get { return $"{FirstName} {LastName}"; } }
-
             [Display(Name = "Avatar")]
+            [NotMapped]
+            [DataType(DataType.Upload)]
             [MaxFileSize(2 * 1024 * 1024)]
-            public string ImagePath { get; set; }
-            public byte[] ImageData { get; set; }
-
+            [AllowedExtensions(new string[] { ".jpg", ".png" })]
+            public IFormFile Avatar { get; set; }
 
             [Required]
             [EmailAddress]
@@ -70,7 +78,7 @@ namespace MVCFinApp.Areas.Identity.Pages.Account
             public string Email { get; set; }
 
             [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+            [StringLength(40, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
             [DataType(DataType.Password)]
             [Display(Name = "Password")]
             public string Password { get; set; }
@@ -79,6 +87,7 @@ namespace MVCFinApp.Areas.Identity.Pages.Account
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
+
         }
 
         public async Task OnGetAsync(string returnUrl = null)
@@ -93,8 +102,31 @@ namespace MVCFinApp.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
             {
-                var user = new FAUser { UserName = Input.Email, Email = Input.Email };
+                byte[] fileData;
+                string fileName;
+                if (Input.Avatar != null)
+                {
+                    fileData = await _avatarService.ConvertFileToByteArrayAsync(Input.Avatar);
+                    fileName = Input.Avatar.FileName;
+                }
+                else
+                {
+                    fileData = await _avatarService.GetDefaultAvatarFileBytesAsync();
+                    fileName = _avatarService.GetDefaultAvatarFileName();
+                }
+                var user = new FAUser
+                {
+                    FirstName = Input.FirstName,
+                    LastName = Input.LastName,
+                    FileName = fileName,
+                    FileData = fileData,
+                    UserName = Input.Email,
+                    Email = Input.Email
+                };
+                //var user = new FAUser { UserName = Input.Email, Email = Input.Email };
+
                 var result = await _userManager.CreateAsync(user, Input.Password);
+                await _userManager.AddToRoleAsync(user, Roles.New.ToString());
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");

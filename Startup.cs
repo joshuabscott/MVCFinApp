@@ -2,19 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
 using MVCFinApp.Data;
 using MVCFinApp.Models;
+using MVCFinApp.Services;
 using MVCFinApp.Utilities;
 
 namespace MVCFinApp
@@ -33,7 +33,7 @@ namespace MVCFinApp
         {
             //1. services are configured for using DbContext
             services.AddDbContext<ApplicationDbContext>(options =>
-               options.UseNpgsql(//switched from defualt, to use NPGSql
+               options.UseNpgsql(//switched from default, to use NPGSql
                 DataHelper.GetConnectionString(Configuration)));
 
             //2. using directive for injection using IdentityRole with BlogUser
@@ -42,8 +42,19 @@ namespace MVCFinApp
                 .AddDefaultUI()
                 .AddDefaultTokenProviders();
 
+            //3. Mail Settings Service
+            services.Configure<MailSettings>(Configuration.GetSection("MailSettings"));
+            services.AddTransient<IEmailSender, EmailService>();
+
+            //4. Avatar upload service or FileService
+            services.Configure<DefaultSettings>(Configuration.GetSection("DefaultSettings"));
+            services.AddScoped<IAvatarService, AvatarService>();
+            // or services.AddScoped<IFileService, FileService>();
+
+            //Default Scaffold for Razor Pages
             services.AddControllersWithViews();
             services.AddRazorPages();
+
             //services.AddDbContext<ApplicationDbContext>(options =>
             //    options.UseSqlServer(
             //        Configuration.GetConnectionString("DefaultConnection")));
