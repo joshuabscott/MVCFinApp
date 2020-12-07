@@ -9,24 +9,21 @@ using Microsoft.EntityFrameworkCore;
 using MVCFinApp.Data;
 using MVCFinApp.Data.Enums;
 using MVCFinApp.Models;
-using MVCFinApp.Models.ViewModels;
-using MVCFinApp.Services;
+using static MVCFinApp.Data.ContextSeed;
 
-namespace RockTransactions.Controllers
+namespace MVCFinApp.Controllers
 {
     public class HouseHoldsController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<FAUser> _userManager;
         private readonly SignInManager<FAUser> _signInManager;
-        //private readonly IHouseHoldService _houseHoldService;
 
-        public HouseHoldsController(ApplicationDbContext context, UserManager<FAUser> userManager, SignInManager<FAUser> signInManager/*, IHouseHoldService houseHoldService*/)
+        public HouseHoldsController(ApplicationDbContext context, UserManager<FAUser> userManager, SignInManager<FAUser> signInManager)
         {
             _context = context;
             _userManager = userManager;
             _signInManager = signInManager;
-            //_houseHoldService = houseHoldService;
         }
 
         // GET: HouseHolds
@@ -34,7 +31,7 @@ namespace RockTransactions.Controllers
         {
             return View(await _context.HouseHold.ToListAsync());
         }
-
+        //Added to allow members to join household
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Join(int id)
@@ -46,39 +43,29 @@ namespace RockTransactions.Controllers
             await _userManager.AddToRoleAsync(user, Roles.Member.ToString());
             await _context.SaveChangesAsync();
 
-            // sign out / sign in
+            
+            await _signInManager.SignOutAsync();
+            await _signInManager.SignInAsync(user, isPersistent: false);
+            return RedirectToAction("Index", "Home");
+        }
+        //added to allow members to leave householld
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Leave()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            user.HouseHoldId = null;
+            var roles = await _userManager.GetRolesAsync(user);
+            await _userManager.RemoveFromRolesAsync(user, roles);
+            await _userManager.AddToRoleAsync(user, Roles.New.ToString());
+            await _context.SaveChangesAsync();
+
+            
             await _signInManager.SignOutAsync();
             await _signInManager.SignInAsync(user, isPersistent: false);
             return RedirectToAction("Index", "Home");
         }
 
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Leave()
-        //{
-        //    var user = await _userManager.GetUserAsync(User);
-        //    if (User.IsInRole("Head"))
-        //    {
-        //        var members = await _houseHoldService.ListHouseHoldMembersAsync(user);
-        //        if (members.Count > 0)
-        //        {
-        //            TempData["Script"] = "CantLeave()";
-        //            return RedirectToAction("Dashboard");
-        //        }
-        //        var houseHold = await _context.HouseHold.FirstOrDefaultAsync(hh => hh.Id == user.HouseHoldId);
-        //        _context.HouseHold.Remove(houseHold);
-        //    }
-        //    user.HouseHoldId = null;
-        //    var roles = await _userManager.GetRolesAsync(user);
-        //    await _userManager.RemoveFromRolesAsync(user, roles);
-        //    await _userManager.AddToRoleAsync(user, Roles.New.ToString());
-        //    await _context.SaveChangesAsync();
-
-        //    // sign out / sign in
-        //    await _signInManager.SignOutAsync();
-        //    await _signInManager.SignInAsync(user, isPersistent: false);
-        //    return RedirectToAction("Index", "Home");
-        //}
 
         // GET: HouseHolds/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -115,31 +102,23 @@ namespace RockTransactions.Controllers
             {
                 _context.Add(houseHold);
                 await _context.SaveChangesAsync();
-
+                //Add
                 var user = await _userManager.GetUserAsync(User);
                 user.HouseHoldId = houseHold.Id;
-
-                var roles = await _userManager.GetRolesAsync(user);
-                await _userManager.RemoveFromRolesAsync(user, roles);
-                await _userManager.AddToRoleAsync(user, Roles.Head.ToString());
                 await _context.SaveChangesAsync();
-
-                // sign out / sign in
+                
+                await _userManager.AddToRoleAsync(user, Roles.Head.ToString());
+                if (User.IsInRole(Roles.New.ToString()))
+                {  
+                    await _userManager.RemoveFromRoleAsync(user, Roles.New.ToString());
+                }
+                
                 await _signInManager.SignOutAsync();
                 await _signInManager.SignInAsync(user, isPersistent: false);
-                return RedirectToAction(nameof(Dashboard));
+                //
+                return RedirectToAction(nameof(Index));
             }
             return View(houseHold);
-        }
-
-        public async Task<IActionResult> Dashboard()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            var model = new HHDashboardVM
-            {
-                Occupants = await _context.Users.Where(u => u.HouseHoldId == user.HouseHoldId).ToListAsync()
-            };
-            return View(model);
         }
 
         // GET: HouseHolds/Edit/5
@@ -217,7 +196,8 @@ namespace RockTransactions.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var user = await _userManager.GetUserAsync(User);
-            user.HouseHoldId = null;
+            user.HouseHoldId = null; //not a string, int? instead on HouseHold Model
+
             var houseHold = await _context.HouseHold.FindAsync(id);
             _context.HouseHold.Remove(houseHold);
             await _context.SaveChangesAsync();

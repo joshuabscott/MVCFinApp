@@ -16,16 +16,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Services\HouseHoldService.cs" />
-    <Compile Remove="Services\IHouseHoldService.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="Views\Home\blank_page.html" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="Views\Shared\Error.cshtml" />
+    <None Include="Views\Shared\_Layout.cshtml" />
     <None Include="Views\Shared\_LoginPartial.cshtml" />
     <None Include="Views\Shared\_ValidationScriptsPartial.cshtml" />
   </ItemGroup>
@@ -47,6 +43,10 @@
     <PackageReference Include="MimeKit" Version="2.10.0" />
     <PackageReference Include="Npgsql" Version="4.1.6" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\ViewModels\" />
   </ItemGroup>
 
 </Project>

@@ -9,13 +9,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MVCFinApp.Data;
 using MVCFinApp.Models;
-using MVCFinApp.Models.ViewModels;
 
 namespace MVCFinApp.Controllers
 {
     [Authorize]
     public class HomeController : Controller
     {
+        //public IActionResult Index()
+        //{
+        //    return View();
+        //}
         private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext _context;
         private readonly UserManager<FAUser> _userManager;
@@ -27,30 +30,18 @@ namespace MVCFinApp.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            string houseHoldName = null;
-            if (user.HouseHoldId != null)
-            {
-                houseHoldName = _context.HouseHold.FirstOrDefault(u => u.Id == user.HouseHoldId).Name;
-            }
-            var model = new LobbyVM
-            {
-                Role = (await _userManager.GetRolesAsync(user))[0],
-                HouseHold = houseHoldName
-            };
-            if (user.HouseHoldId != null)
-            {
-                return RedirectToAction("Dashboard", "HouseHolds");
-            }
-            return View(model);
-        }
-
-        public IActionResult Privacy()
+        public IActionResult Index()
         {
             return View();
         }
+
+
+
+        //public Task<IActionResult> Privacy()
+        //{
+        //    //return View();
+        //}
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

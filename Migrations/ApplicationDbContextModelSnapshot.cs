@@ -27,12 +27,10 @@ namespace MVCFinApp.Migrations
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("ContentType")
-                        .IsRequired()
                         .HasColumnType("character varying(50)")
                         .HasMaxLength(50);
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("character varying(50)")
                         .HasMaxLength(50);
 
@@ -40,7 +38,6 @@ namespace MVCFinApp.Migrations
                         .HasColumnType("bytea");
 
                     b.Property<string>("FileName")
-                        .IsRequired()
                         .HasColumnType("character varying(30)")
                         .HasMaxLength(30);
 
@@ -64,8 +61,7 @@ namespace MVCFinApp.Migrations
                     b.Property<decimal>("CurrentBalance")
                         .HasColumnType("decimal(10,2)");
 
-                    b.Property<string>("FAUserId")
-                        .IsRequired()
+                    b.Property<string>("FPUserId")
                         .HasColumnType("character varying(30)")
                         .HasMaxLength(30);
 
@@ -84,7 +80,7 @@ namespace MVCFinApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FAUserId");
+                    b.HasIndex("FPUserId");
 
                     b.HasIndex("HouseHoldId");
 
@@ -99,7 +95,6 @@ namespace MVCFinApp.Migrations
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("character varying(50)")
                         .HasMaxLength(50);
 
@@ -107,7 +102,6 @@ namespace MVCFinApp.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("character varying(30)")
                         .HasMaxLength(30);
 
@@ -132,12 +126,10 @@ namespace MVCFinApp.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("character varying(50)")
                         .HasMaxLength(50);
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("character varying(30)")
                         .HasMaxLength(30);
 
@@ -181,7 +173,7 @@ namespace MVCFinApp.Migrations
                         .HasColumnType("character varying(30)")
                         .HasMaxLength(30);
 
-                    b.Property<int?>("HouseHoldId")
+                    b.Property<int>("HouseHoldId")
                         .HasColumnType("integer");
 
                     b.Property<string>("LastName")
@@ -247,7 +239,6 @@ namespace MVCFinApp.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Greeting")
-                        .IsRequired()
                         .HasColumnType("character varying(50)")
                         .HasMaxLength(50);
 
@@ -272,7 +263,6 @@ namespace MVCFinApp.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("Body")
-                        .IsRequired()
                         .HasColumnType("character varying(100)")
                         .HasMaxLength(100);
 
@@ -283,7 +273,6 @@ namespace MVCFinApp.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("EmailTo")
-                        .IsRequired()
                         .HasColumnType("character varying(50)")
                         .HasMaxLength(50);
 
@@ -294,7 +283,6 @@ namespace MVCFinApp.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Subject")
-                        .IsRequired()
                         .HasColumnType("character varying(50)")
                         .HasMaxLength(50);
 
@@ -313,7 +301,6 @@ namespace MVCFinApp.Migrations
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("Body")
-                        .IsRequired()
                         .HasColumnType("character varying(100)")
                         .HasMaxLength(100);
 
@@ -327,7 +314,6 @@ namespace MVCFinApp.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("Subject")
-                        .IsRequired()
                         .HasColumnType("character varying(30)")
                         .HasMaxLength(30);
 
@@ -365,7 +351,6 @@ namespace MVCFinApp.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("Memo")
-                        .IsRequired()
                         .HasColumnType("character varying(100)")
                         .HasMaxLength(100);
 
@@ -524,11 +509,9 @@ namespace MVCFinApp.Migrations
 
             modelBuilder.Entity("MVCFinApp.Models.BankAccount", b =>
                 {
-                    b.HasOne("MVCFinApp.Models.FAUser", "FAUser")
+                    b.HasOne("MVCFinApp.Models.FAUser", "FPUser")
                         .WithMany("BankAccounts")
-                        .HasForeignKey("FAUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("FPUserId");
 
                     b.HasOne("MVCFinApp.Models.HouseHold", "HouseHold")
                         .WithMany("BankAccounts")
@@ -559,7 +542,9 @@ namespace MVCFinApp.Migrations
                 {
                     b.HasOne("MVCFinApp.Models.HouseHold", "HouseHold")
                         .WithMany("FAUsers")
-                        .HasForeignKey("HouseHoldId");
+                        .HasForeignKey("HouseHoldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("MVCFinApp.Models.Invitation", b =>

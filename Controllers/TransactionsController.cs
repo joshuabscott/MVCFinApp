@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using MVCFinApp.Data;
 using MVCFinApp.Models;
 
-namespace RockTransactions.Controllers
+namespace MVCFinApp.Controllers
 {
     public class TransactionsController : Controller
     {
@@ -53,18 +53,18 @@ namespace RockTransactions.Controllers
         // GET: Transactions/Create
         public IActionResult Create()
         {
-            ViewData["BankAccountId"] = new SelectList(_context.BankAccount, "Id", "Name");
-            ViewData["CategoryItemId"] = new SelectList(_context.CategoryItem, "Id", "Name");
-            ViewData["FPUserId"] = new SelectList(_context.Users, "Id", "FullName");
+            ViewData["BankAccountId"] = new SelectList(_context.BankAccount, "Id", "Id");
+            ViewData["CategoryItemId"] = new SelectList(_context.CategoryItem, "Id", "Id");
+            ViewData["FAUserId"] = new SelectList(_context.Users, "Id", "Id");
             return View();
         }
 
         // POST: Transactions/Create
-        // To protect from over-posting attacks, enable the specific properties you want to bind to, for 
+        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,CategoryItemId,BankAccountId,FPUserId,Created,Type,Memo,Amount,IsDeleted")] Transaction transaction)
+        public async Task<IActionResult> Create([Bind("Id,CategoryItemId,BankAccountId,FAUserId,Created,Type,Memo,Amount,IsDeleted")] Transaction transaction)
         {
             transaction.FAUserId = _userManager.GetUserId(User);
             if (ModelState.IsValid)
@@ -75,7 +75,7 @@ namespace RockTransactions.Controllers
             }
             ViewData["BankAccountId"] = new SelectList(_context.BankAccount, "Id", "Id", transaction.BankAccountId);
             ViewData["CategoryItemId"] = new SelectList(_context.CategoryItem, "Id", "Id", transaction.CategoryItemId);
-            ViewData["FPUserId"] = new SelectList(_context.Users, "Id", "Id", transaction.FAUserId);
+            ViewData["FAUserId"] = new SelectList(_context.Users, "Id", "Id", transaction.FAUserId);
             return View(transaction);
         }
 
@@ -94,16 +94,16 @@ namespace RockTransactions.Controllers
             }
             ViewData["BankAccountId"] = new SelectList(_context.BankAccount, "Id", "Id", transaction.BankAccountId);
             ViewData["CategoryItemId"] = new SelectList(_context.CategoryItem, "Id", "Id", transaction.CategoryItemId);
-            ViewData["FPUserId"] = new SelectList(_context.Users, "Id", "Id", transaction.FAUserId);
+            ViewData["FAUserId"] = new SelectList(_context.Users, "Id", "Id", transaction.FAUserId);
             return View(transaction);
         }
 
         // POST: Transactions/Edit/5
-        // To protect from over-posting attacks, enable the specific properties you want to bind to, for 
+        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,CategoryItemId,BankAccountId,FPUserId,Created,Type,Memo,Amount,IsDeleted")] Transaction transaction)///what is using system transactions??
+        public async Task<IActionResult> Edit(int id, [Bind("Id,CategoryItemId,BankAccountId,FAUserId,Created,Type,Memo,Amount,IsDeleted")] Transaction transaction)
         {
             if (id != transaction.Id)
             {
@@ -132,7 +132,7 @@ namespace RockTransactions.Controllers
             }
             ViewData["BankAccountId"] = new SelectList(_context.BankAccount, "Id", "Id", transaction.BankAccountId);
             ViewData["CategoryItemId"] = new SelectList(_context.CategoryItem, "Id", "Id", transaction.CategoryItemId);
-            ViewData["FPUserId"] = new SelectList(_context.Users, "Id", "Id", transaction.FAUserId);
+            ViewData["FAUserId"] = new SelectList(_context.Users, "Id", "Id", transaction.FAUserId);
             return View(transaction);
         }
 
