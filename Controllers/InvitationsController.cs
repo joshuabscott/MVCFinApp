@@ -1,22 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MVCFinApp.Data;
 using MVCFinApp.Models;
 
-namespace MVCFinApp.Controllers
+namespace RockTransactions.Controllers
 {
     public class InvitationsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IEmailSender _emailService;
 
-        public InvitationsController(ApplicationDbContext context)
+        public InvitationsController(ApplicationDbContext context, IEmailSender emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         // GET: Invitations
@@ -45,6 +50,7 @@ namespace MVCFinApp.Controllers
             return View(invitation);
         }
 
+        [Authorize(Roles = "Administrator,Head")]
         // GET: Invitations/Create
         public IActionResult Create()
         {
@@ -52,8 +58,9 @@ namespace MVCFinApp.Controllers
             return View();
         }
 
+        [Authorize(Roles = "Administrator,Head")]
         // POST: Invitations/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
+        // To protect from over-posting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -61,9 +68,10 @@ namespace MVCFinApp.Controllers
         {
             if (ModelState.IsValid)
             {
+                await _emailService.SendEmailAsync(invitation.EmailTo, invitation.Subject, invitation.Body);
                 _context.Add(invitation);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Dashboard", "HouseHolds");
             }
             ViewData["HouseHoldId"] = new SelectList(_context.HouseHold, "Id", "Name", invitation.HouseHoldId);
             return View(invitation);
@@ -87,7 +95,7 @@ namespace MVCFinApp.Controllers
         }
 
         // POST: Invitations/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
+        // To protect from over-posting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]

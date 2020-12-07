@@ -13,15 +13,6 @@ namespace MVCFinApp.Data
 {
     public class ContextSeed
     {
-
-        //public enum Roles
-        //{
-        //    Administrator,
-        //    Head,
-        //    Member,
-        //    New
-        //}
-
         public static async Task SeedDataBaseAsync(ApplicationDbContext context, UserManager<FAUser> userManager, RoleManager<IdentityRole> roleManager, IAvatarService fileService)
         {
             await SeedRolesAsync(roleManager);

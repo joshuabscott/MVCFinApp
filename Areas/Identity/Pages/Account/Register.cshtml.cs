@@ -15,13 +15,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-using MVCFinApp.Data;
-using MVCFinApp.Models;
+using MVCFinApp.Data.Enums;
 using MVCFinApp.Extensions;
+using MVCFinApp.Models;
 using MVCFinApp.Services;
 using static MVCFinApp.Extensions.CustomAttributes;
-using static MVCFinApp.Data.ContextSeed;
-using MVCFinApp.Data.Enums;
 
 namespace MVCFinApp.Areas.Identity.Pages.Account
 {
@@ -32,20 +30,20 @@ namespace MVCFinApp.Areas.Identity.Pages.Account
         private readonly UserManager<FAUser> _userManager;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
-        private readonly IAvatarService _avatarService;
+        private readonly IAvatarService _fileService;
 
         public RegisterModel(
             UserManager<FAUser> userManager,
             SignInManager<FAUser> signInManager,
             ILogger<RegisterModel> logger,
             IEmailSender emailSender,
-            IAvatarService avatarService)
+            IAvatarService fileService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
-            _avatarService = avatarService;
+            _fileService = fileService;
         }
 
         [BindProperty]
@@ -78,7 +76,7 @@ namespace MVCFinApp.Areas.Identity.Pages.Account
             public string Email { get; set; }
 
             [Required]
-            [StringLength(40, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
             [DataType(DataType.Password)]
             [Display(Name = "Password")]
             public string Password { get; set; }
@@ -87,7 +85,6 @@ namespace MVCFinApp.Areas.Identity.Pages.Account
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
-
         }
 
         public async Task OnGetAsync(string returnUrl = null)
@@ -106,13 +103,13 @@ namespace MVCFinApp.Areas.Identity.Pages.Account
                 string fileName;
                 if (Input.Avatar != null)
                 {
-                    fileData = await _avatarService.ConvertFileToByteArrayAsync(Input.Avatar);
+                    fileData = await _fileService.ConvertFileToByteArrayAsync(Input.Avatar);
                     fileName = Input.Avatar.FileName;
                 }
                 else
                 {
-                    fileData = await _avatarService.GetDefaultAvatarFileBytesAsync();
-                    fileName = _avatarService.GetDefaultAvatarFileName();
+                    fileData = await _fileService.GetDefaultAvatarFileBytesAsync();
+                    fileName = _fileService.GetDefaultAvatarFileName();
                 }
                 var user = new FAUser
                 {
@@ -123,8 +120,6 @@ namespace MVCFinApp.Areas.Identity.Pages.Account
                     UserName = Input.Email,
                     Email = Input.Email
                 };
-                //var user = new FAUser { UserName = Input.Email, Email = Input.Email };
-
                 var result = await _userManager.CreateAsync(user, Input.Password);
                 await _userManager.AddToRoleAsync(user, Roles.New.ToString());
                 if (result.Succeeded)
