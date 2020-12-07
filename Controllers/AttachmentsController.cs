@@ -5,11 +5,13 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using MVCFinApp.Data;
 using MVCFinApp.Models;
 
 namespace MVCFinApp.Controllers
 {
+    [Authorize]
     public class AttachmentsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -53,7 +55,7 @@ namespace MVCFinApp.Controllers
         }
 
         // POST: Attachments/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
+        // To protect from over-posting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -87,7 +89,7 @@ namespace MVCFinApp.Controllers
         }
 
         // POST: Attachments/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
+        // To protect from over-posting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]

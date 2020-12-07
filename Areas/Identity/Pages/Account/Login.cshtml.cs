@@ -22,7 +22,7 @@ namespace MVCFinApp.Areas.Identity.Pages.Account
         private readonly SignInManager<FAUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(SignInManager<FAUser> signInManager, 
+        public LoginModel(SignInManager<FAUser> signInManager,
             ILogger<LoginModel> logger,
             UserManager<FAUser> userManager)
         {

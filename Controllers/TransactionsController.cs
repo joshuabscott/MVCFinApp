@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -11,6 +12,7 @@ using MVCFinApp.Models;
 
 namespace MVCFinApp.Controllers
 {
+    [Authorize]
     public class TransactionsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -53,14 +55,14 @@ namespace MVCFinApp.Controllers
         // GET: Transactions/Create
         public IActionResult Create()
         {
-            ViewData["BankAccountId"] = new SelectList(_context.BankAccount, "Id", "Id");
-            ViewData["CategoryItemId"] = new SelectList(_context.CategoryItem, "Id", "Id");
-            ViewData["FAUserId"] = new SelectList(_context.Users, "Id", "Id");
+            ViewData["BankAccountId"] = new SelectList(_context.BankAccount, "Id", "Name");
+            ViewData["CategoryItemId"] = new SelectList(_context.CategoryItem, "Id", "Name");
+            ViewData["FAUserId"] = new SelectList(_context.Users, "Id", "FullName");
             return View();
         }
 
         // POST: Transactions/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
+        // To protect from over-posting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -99,11 +101,11 @@ namespace MVCFinApp.Controllers
         }
 
         // POST: Transactions/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
+        // To protect from over-posting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,CategoryItemId,BankAccountId,FAUserId,Created,Type,Memo,Amount,IsDeleted")] Transaction transaction)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,CategoryItemId,BankAccountId,FAUserId,Created,Type,Memo,Amount,IsDeleted")] Transaction transaction)///what is using system transactions??
         {
             if (id != transaction.Id)
             {

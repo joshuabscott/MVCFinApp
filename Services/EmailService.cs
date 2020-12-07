@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Options;
 using MimeKit;
 
+
 namespace MVCFinApp.Services
 {
     public class EmailService : IEmailSender

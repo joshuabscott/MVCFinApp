@@ -1,22 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MVCFinApp.Data;
 using MVCFinApp.Models;
+using MVCFinApp.Services;
 
 namespace MVCFinApp.Controllers
 {
+    [Authorize]
     public class NotificationsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        //private readonly SignInManager<FAUser> _signInManager;
+        //private readonly UserManager<FAUser> _userManager;
+        //private readonly IAvatarService _fileService;
+        //private readonly IEmailSender _emailService;
 
-        public NotificationsController(ApplicationDbContext context)
+        public NotificationsController(ApplicationDbContext context/*, SignInManager<FAUser> signInManager, UserManager<FAUser> userManager, IAvatarService fileService, IEmailSender emailService*/)
         {
             _context = context;
+            //_signInManager = signInManager;
+            //_userManager = userManager;
+            //_fileService = fileService;
+            //_emailService = emailService;
         }
 
         // GET: Notifications
@@ -53,7 +68,7 @@ namespace MVCFinApp.Controllers
         }
 
         // POST: Notifications/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
+        // To protect from over-posting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]

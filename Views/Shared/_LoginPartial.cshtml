@@ -1,21 +1,19 @@
 ﻿@using Microsoft.AspNetCore.Identity
-@using MVCFinApp.Services
 @inject SignInManager<FAUser> SignInManager
 @inject UserManager<FAUser> UserManager
-@inject IAvatarService AvatarService
-
+@inject MVCFinApp.Services.IAvatarService AvatarService
 
 @{
-var user = await UserManager.GetUserAsync(User);
-string avatar = AvatarService.ConvertByteArrayToFile(user.FileData, user.FileName.Split('.')[1]);
+    var user = await UserManager.GetUserAsync(User);
+    //string avatar = AvatarService.ConvertByteArrayToFile(user.FileData, user.FileName.Split('.')[1]);
 }
 
 <ul class="navbar-nav">
     @if (SignInManager.IsSignedIn(User))
     {
-        <li class="avatar avatar-lg">
-            <img alt="avatar" src="@avatar" class="rounded-circle mt-1" style="height:50px;" />
-        </li>
+        @*<li class="avatar avatar-lg">
+                <img alt="avatar" src="@avatar" class="rounded-circle mt-1" style="height:50px;" />
+            </li>*@
         <li class="nav-item">
             <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @user.FullName!</a>
         </li>
