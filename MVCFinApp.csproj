@@ -16,6 +16,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Services\HouseHoldService.cs" />
+    <Compile Remove="Services\IHouseHoldService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Views\Home\blank_page.html" />
   </ItemGroup>
 

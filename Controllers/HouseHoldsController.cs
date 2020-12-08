@@ -21,14 +21,14 @@ namespace MVCFinApp.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<FAUser> _userManager;
         private readonly SignInManager<FAUser> _signInManager;
-        private readonly IHouseHoldService _houseHoldService;
+        //private readonly IHouseHoldService _houseHoldService;
 
-        public HouseHoldsController(ApplicationDbContext context, UserManager<FAUser> userManager, SignInManager<FAUser> signInManager, IHouseHoldService houseHoldService)
+        public HouseHoldsController(ApplicationDbContext context, UserManager<FAUser> userManager, SignInManager<FAUser> signInManager/*, IHouseHoldService houseHoldService*/)
         {
             _context = context;
             _userManager = userManager;
             _signInManager = signInManager;
-            _houseHoldService = houseHoldService;
+            //_houseHoldService = houseHoldService;
         }
 
         // GET: HouseHolds
@@ -55,34 +55,34 @@ namespace MVCFinApp.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        //Leave Household
+       // Leave Household
         //[HttpPost]
         //[ValidateAntiForgeryToken]
         //public async Task<IActionResult> Leave()
         //{
-        //    var user = await _userManager.GetUserAsync(User);
-        //    if (User.IsInRole("Head"))
-        //    {
-        //        var members = await _houseHoldService.ListHouseHoldMembersAsync(user);
-        //        if (members.Count > 0)
-        //        {
-        //            TempData["Script"] = "CantLeave()";
-        //            return RedirectToAction("Dashboard");
-        //        }
-        //        var houseHold = await _context.HouseHold.FirstOrDefaultAsync(hh => hh.Id == user.HouseHoldId);
-        //        _context.HouseHold.Remove(houseHold);
-        //    }
-        //    user.HouseHoldId = null;
-        //    var roles = await _userManager.GetRolesAsync(user);
-        //    await _userManager.RemoveFromRolesAsync(user, roles);
-        //    await _userManager.AddToRoleAsync(user, Roles.New.ToString());
-        //    await _context.SaveChangesAsync();
+            //var user = await _userManager.GetUserAsync(User);
+            //if (User.IsInRole("Head"))
+            //{
+            //    var members = await _houseHoldService.ListHouseHoldMembersAsync(user);
+            //    if (members.Count > 0)
+            //    {
+            //        TempData["Script"] = "CantLeave()";
+            //        return RedirectToAction("Dashboard");
+            //    }
+            //    var houseHold = await _context.HouseHold.FirstOrDefaultAsync(hh => hh.Id == user.HouseHoldId);
+            //    _context.HouseHold.Remove(houseHold);
+            //}
+            //user.HouseHoldId = null;
+            //var roles = await _userManager.GetRolesAsync(user);
+            //await _userManager.RemoveFromRolesAsync(user, roles);
+            //await _userManager.AddToRoleAsync(user, Roles.New.ToString());
+            //await _context.SaveChangesAsync();
 
-        //    // sign out/in
-        //    await _signInManager.SignOutAsync();
-        //    await _signInManager.SignInAsync(user, isPersistent: false);
-        //    return RedirectToAction("Index", "Home");
-        //}
+            //// sign out/in
+            //await _signInManager.SignOutAsync();
+            //await _signInManager.SignInAsync(user, isPersistent: false);
+            //return RedirectToAction("Index", "Home");
+       // }
 
         // GET: HouseHolds/Details/5
         public async Task<IActionResult> Details(int? id)

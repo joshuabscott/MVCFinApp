@@ -61,8 +61,8 @@ namespace MVCFinApp.Controllers
             return View(invitation);
         }
 
-        // GET: Invitations/Create
         [Authorize(Roles = "Administrator,Head")]
+        // GET: Invitations/Create
         public IActionResult Create()
         {
             ViewData["HouseHoldId"] = new SelectList(_context.HouseHold, "Id", "Name");
@@ -94,25 +94,24 @@ namespace MVCFinApp.Controllers
                 //2. this will create the record of the invitation
                 _context.Add(invitation);
                 await _context.SaveChangesAsync();
-                
-                //3. build the email to be sent as the invitation body
-                //var callbackUrl = Url.Action("Accept", "Invitations", new { email = invitation.EmailTo, code = invitation.Code }, protocol: Request.Scheme);
-                //string houseHoldName = (await _context.HouseHold.FirstOrDefaultAsync(hh => hh.Id == invitation.HouseHoldId)).Name;
-                //var emailBody =
-                //    //$"{invitation.Body} <br/><p><h3>Your invited to join the {houseHoldName} household.</h3><br/><a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>Click here to accept</a>.";
-                //    $"<h3>You are invited to join the <em>{houseHoldName}</em> household.</h3>" +
-                //    $"<h6>{invitation.Body}</h6><br/>" +
-                //    $"<a href='{HtmlEncoder.Default.Encode(acceptUrl)}'>Accept</a>" +
-                //    $" Or " +
-                //    $"<a href='{HtmlEncoder.Default.Encode(declineUrl)}'> Deny</a>.";
 
-                //4. send the email to invite the user to become a member
-                //await _emailService.SendEmailAsync(invitation.EmailTo, invitation.Subject, emailBody);
+                // 3.build the email to be sent as the invitation body
+                var acceptUrl = Url.Action("Accept", "Invitations", new { email = invitation.EmailTo, code = invitation.Code }, protocol: Request.Scheme);
+                var declineUrl = Url.Action("Decline", "Invitations", new { code = invitation.Code }, protocol: Request.Scheme);
+                string houseHoldName = (await _context.HouseHold.FirstOrDefaultAsync(hh => hh.Id == invitation.HouseHoldId)).Name;
+                var emailBody =
+                    $"<h3>You are invited to join the <em>{houseHoldName}</em> household.</h3>" +
+                    $"<h6>{invitation.Body}</h6><br/>" +
+                    $"<a href='{HtmlEncoder.Default.Encode(acceptUrl)}'>Accept</a>" +
+                    $" Or " +
+                    $"<a href='{HtmlEncoder.Default.Encode(declineUrl)}'> Deny</a>.";
+
+                // 4.send the email to invite the user to become a member
+                await _emailService.SendEmailAsync(invitation.EmailTo, invitation.Subject, emailBody);
 
                 //5. Alert
                 TempData["Script"] = "CanInvite()";
                 return RedirectToAction("Dashboard", "HouseHolds");
-                //return RedirectToAction(nameof(Index));
             }
             ViewData["HouseHoldId"] = new SelectList(_context.HouseHold, "Id", "Name", invitation.HouseHoldId);
             return View(invitation);
@@ -121,17 +120,17 @@ namespace MVCFinApp.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Accept(string email, string code)
         {
-            // force signed out
+            // ensure signed out
             await _signInManager.SignOutAsync();
 
-            // validate invitation to make sure it is not expired 
+            // validate invitation
             var invitation = await _context.Invitation.FirstOrDefaultAsync(i => i.Code.ToString() == code);
             if (invitation == null || invitation.Accepted == true || DateTime.Now > invitation.Expires)
             {
                 return NotFound();
             }
 
-            // User is not a member yet
+            // doesn't have an account
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null)
             {
@@ -140,7 +139,7 @@ namespace MVCFinApp.Controllers
                 return View();
             }
 
-            // User is already a member
+            // does have an account
             invitation.Accepted = true;
             user.HouseHoldId = invitation.HouseHoldId;
             var roles = await _userManager.GetRolesAsync(user);
@@ -182,7 +181,7 @@ namespace MVCFinApp.Controllers
             invitation.Accepted = true;
             var result = await _userManager.CreateAsync(user, password);
             await _userManager.AddToRoleAsync(user, Roles.Member.ToString());
-            await _signInManager.SignInAsync(user, /*isPersistent:*/ false);
+            await _signInManager.SignInAsync(user, false);
             await _context.SaveChangesAsync();
             return RedirectToAction("Dashboard", "HouseHolds");
         }

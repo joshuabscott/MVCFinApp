@@ -50,7 +50,7 @@ namespace MVCFinApp.Controllers
         // GET: Categories/Create
         public IActionResult Create()
         {
-            ViewData["HouseHoldId"] = new SelectList(_context.HouseHold, "Id", "Name");
+            ViewData["HouseHoldId"] = new SelectList(_context.Set<HouseHold>(), "Id", "Name");
             return View();
         }
 
@@ -65,9 +65,9 @@ namespace MVCFinApp.Controllers
             {
                 _context.Add(category);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Dashboard", "HouseHolds");
             }
-            ViewData["HouseHoldId"] = new SelectList(_context.HouseHold, "Id", "Name", category.HouseHoldId);
+            ViewData["HouseHoldId"] = new SelectList(_context.Set<HouseHold>(), "Id", "Name", category.HouseHoldId);
             return View(category);
         }
 
@@ -84,7 +84,7 @@ namespace MVCFinApp.Controllers
             {
                 return NotFound();
             }
-            ViewData["HouseHoldId"] = new SelectList(_context.HouseHold, "Id", "Name", category.HouseHoldId);
+            ViewData["HouseHoldId"] = new SelectList(_context.Set<HouseHold>(), "Id", "Name", category.HouseHoldId);
             return View(category);
         }
 
@@ -120,7 +120,7 @@ namespace MVCFinApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["HouseHoldId"] = new SelectList(_context.HouseHold, "Id", "Name", category.HouseHoldId);
+            ViewData["HouseHoldId"] = new SelectList(_context.Set<HouseHold>(), "Id", "Name", category.HouseHoldId);
             return View(category);
         }
 

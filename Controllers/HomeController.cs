@@ -16,14 +16,14 @@ namespace MVCFinApp.Controllers
     [Authorize]
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<HomeController> _logger;
         private readonly UserManager<FAUser> _userManager;
 
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, UserManager<FAUser> userManager)
+        public HomeController(ApplicationDbContext context, ILogger<HomeController> logger, UserManager<FAUser> userManager)
         {
-            _logger = logger;
             _context = context;
+            _logger = logger;
             _userManager = userManager;
         }
 

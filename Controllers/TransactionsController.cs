@@ -73,7 +73,7 @@ namespace MVCFinApp.Controllers
             {
                 _context.Add(transaction);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Dashboard", "HouseHolds");
             }
             ViewData["BankAccountId"] = new SelectList(_context.BankAccount, "Id", "Id", transaction.BankAccountId);
             ViewData["CategoryItemId"] = new SelectList(_context.CategoryItem, "Id", "Id", transaction.CategoryItemId);
@@ -105,7 +105,7 @@ namespace MVCFinApp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,CategoryItemId,BankAccountId,FAUserId,Created,Type,Memo,Amount,IsDeleted")] Transaction transaction)///what is using system transactions??
+        public async Task<IActionResult> Edit(int id, [Bind("Id,CategoryItemId,BankAccountId,FAUserId,Created,Type,Memo,Amount,IsDeleted")] Transaction transaction)
         {
             if (id != transaction.Id)
             {

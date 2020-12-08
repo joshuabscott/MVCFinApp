@@ -55,7 +55,7 @@ namespace MVCFinApp.Controllers
         }
 
         // POST: CategoryItems/Create
-        // To protect from over-posting attacks, enable the specific properties you want to bind to, for 
+        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -65,7 +65,7 @@ namespace MVCFinApp.Controllers
             {
                 _context.Add(categoryItem);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Dashboard", "HouseHolds");
             }
             ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Id", categoryItem.CategoryId);
             return View(categoryItem);
@@ -89,7 +89,7 @@ namespace MVCFinApp.Controllers
         }
 
         // POST: CategoryItems/Edit/5
-        // To protect from over-posting attacks, enable the specific properties you want to bind to, for 
+        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]

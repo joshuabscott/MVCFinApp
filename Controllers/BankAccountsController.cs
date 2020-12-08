@@ -27,9 +27,7 @@ namespace MVCFinApp.Controllers
         // GET: BankAccounts
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.BankAccount
-                .Include(b => b.HouseHold)
-                .Include(u => u.FAUser);
+            var applicationDbContext = _context.BankAccount.Include(b => b.HouseHold).Include(u => u.FAUser);
             return View(await applicationDbContext.ToListAsync());
         }
 
@@ -53,9 +51,8 @@ namespace MVCFinApp.Controllers
         }
 
         // GET: BankAccounts/Create
-        public async Task<IActionResult> CreateAsync()
+        public async Task<IActionResult> Create()
         {
-            //ViewData["HouseHoldId"] = new SelectList(_context.HouseHold, "Id", "Name");
             var user = await _userManager.GetUserAsync(User);
             ViewData["HouseHoldId"] = user.HouseHoldId;
             return View();
@@ -68,13 +65,12 @@ namespace MVCFinApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,HouseHoldId,FAUserId,Name,Type,StartingBalance,CurrentBalance")] BankAccount bankAccount)
         {
-            //Add this line
             bankAccount.FAUserId = _userManager.GetUserId(User);
             if (ModelState.IsValid)
             {
                 _context.Add(bankAccount);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Dashboard", "HouseHolds");
             }
             ViewData["HouseHoldId"] = new SelectList(_context.HouseHold, "Id", "Name", bankAccount.HouseHoldId);
             return View(bankAccount);
@@ -98,7 +94,7 @@ namespace MVCFinApp.Controllers
         }
 
         // POST: BankAccounts/Edit/5
-        // To protect from over-posting attacks, enable the specific properties you want to bind to, for 
+        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
