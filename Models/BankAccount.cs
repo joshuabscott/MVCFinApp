@@ -14,6 +14,7 @@ namespace MVCFinApp.Models
         public int Id { get; set; }
         public int HouseHoldId { get; set; }
         public HouseHold HouseHold { get; set; }
+
         [Required]
         [StringLength(30, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 2)]
         public string FAUserId { get; set; }//string instead of int because it will be a Guid
@@ -33,5 +34,6 @@ namespace MVCFinApp.Models
         public decimal CurrentBalance { get; set; }
 
         public virtual ICollection<Transaction> Transactions { get; set; } = new HashSet<Transaction>();
+        public virtual ICollection<History> Histories { get; set; } = new HashSet<History>();
     }
 }

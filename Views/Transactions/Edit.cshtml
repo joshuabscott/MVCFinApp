@@ -1,4 +1,5 @@
 ﻿@model MVCFinApp.Models.Transaction
+@using MVCFinApp.Data.Enums
 
 @{
     ViewData["Title"] = "Edit";
@@ -10,6 +11,7 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
+
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
@@ -24,23 +26,15 @@
                 <span asp-validation-for="BankAccountId" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="FAUserId" class="control-label"></label>
-                <select asp-for="FAUserId" class="form-control" asp-items="ViewBag.FAUserId"></select>
-                <span asp-validation-for="FAUserId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
                 <label asp-for="Created" class="control-label"></label>
                 <input asp-for="Created" class="form-control" />
                 <span asp-validation-for="Created" class="text-danger"></span>
             </div>
-
             <div class="form-group">
                 <label asp-for="Type" class="control-label"></label>
-                <select asp-for="Type" class="form-control"></select>
-                @*<input asp-for="Type" class="form-control" />*@
+                <select asp-items="@Html.GetEnumSelectList<TransactionType>()" class="form-control"></select>
                 <span asp-validation-for="Type" class="text-danger"></span>
             </div>
-
             <div class="form-group">
                 <label asp-for="Memo" class="control-label"></label>
                 <input asp-for="Memo" class="form-control" />
@@ -51,22 +45,21 @@
                 <input asp-for="Amount" class="form-control" />
                 <span asp-validation-for="Amount" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <div class="checkbox">
-                    <label>
-                        <input asp-for="IsDeleted" /> @Html.DisplayNameFor(model => model.IsDeleted)
-                    </label>
-                </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsDeleted" /> @Html.DisplayNameFor(model => model.IsDeleted)
+                </label>
             </div>
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-default" />
+                <input type="submit" value="Save" class="btn btn-primary" />
             </div>
         </form>
+
     </div>
 </div>
 
 <div>
-    <a asp-action="Index">Back to List</a>
+    <a class="btn btn-info" asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {

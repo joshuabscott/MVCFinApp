@@ -36,12 +36,6 @@ namespace MVCFinApp.Services
             return members;
         }
 
-        public async Task<string> GetRoleAsync(FAUser user)
-        {
-            var roles = await _userManager.GetRolesAsync(user);
-            return roles[0];
-        }
-
         public List<Transaction> ListTransactions(HouseHold houseHold)
         {
             var transactions = new List<ICollection<Transaction>>();
@@ -50,6 +44,22 @@ namespace MVCFinApp.Services
                 transactions.Add(bankAccount.Transactions);
             }
             return transactions.SelectMany(t => t).ToList();
+        }
+
+        public async Task<string> GetRoleAsync(FAUser user)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            return roles[0];
+        }
+
+        public async Task<string> GetGreetingAsync(FAUser user)
+        {
+            var houseHold = await _context.HouseHold.FirstOrDefaultAsync(hh => hh.Id == user.HouseHoldId);
+            if (houseHold == null)
+            {
+                return "Hello";
+            }
+            return houseHold.Greeting;
         }
     }
 }

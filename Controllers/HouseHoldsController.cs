@@ -21,23 +21,23 @@ namespace MVCFinApp.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<FAUser> _userManager;
         private readonly SignInManager<FAUser> _signInManager;
-        //private readonly IHouseHoldService _houseHoldService;
+        private readonly IHouseHoldService _houseHoldService;
 
-        public HouseHoldsController(ApplicationDbContext context, UserManager<FAUser> userManager, SignInManager<FAUser> signInManager/*, IHouseHoldService houseHoldService*/)
+        public HouseHoldsController(ApplicationDbContext context, UserManager<FAUser> userManager, SignInManager<FAUser> signInManager, IHouseHoldService houseHoldService)
         {
             _context = context;
             _userManager = userManager;
             _signInManager = signInManager;
-            //_houseHoldService = houseHoldService;
+            _houseHoldService = houseHoldService;
         }
 
         // GET: HouseHolds
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Index()
         {
             return View(await _context.HouseHold.ToListAsync());
         }
 
-        //Join Household
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Join(int id)
@@ -49,42 +49,46 @@ namespace MVCFinApp.Controllers
             await _userManager.AddToRoleAsync(user, Roles.Member.ToString());
             await _context.SaveChangesAsync();
 
-            // sign out/in
-            await _signInManager.SignOutAsync();
-            await _signInManager.SignInAsync(user, isPersistent: false);
+            // sign out / sign in
+            await _signInManager.RefreshSignInAsync(user);
             return RedirectToAction("Index", "Home");
         }
 
-       // Leave Household
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Leave()
-        //{
-            //var user = await _userManager.GetUserAsync(User);
-            //if (User.IsInRole("Head"))
-            //{
-            //    var members = await _houseHoldService.ListHouseHoldMembersAsync(user);
-            //    if (members.Count > 0)
-            //    {
-            //        TempData["Script"] = "CantLeave()";
-            //        return RedirectToAction("Dashboard");
-            //    }
-            //    var houseHold = await _context.HouseHold.FirstOrDefaultAsync(hh => hh.Id == user.HouseHoldId);
-            //    _context.HouseHold.Remove(houseHold);
-            //}
-            //user.HouseHoldId = null;
-            //var roles = await _userManager.GetRolesAsync(user);
-            //await _userManager.RemoveFromRolesAsync(user, roles);
-            //await _userManager.AddToRoleAsync(user, Roles.New.ToString());
-            //await _context.SaveChangesAsync();
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Leave()
+        {
+            var user = await _userManager.GetUserAsync(User);
 
-            //// sign out/in
-            //await _signInManager.SignOutAsync();
-            //await _signInManager.SignInAsync(user, isPersistent: false);
-            //return RedirectToAction("Index", "Home");
-       // }
+            if (User.IsInRole(Roles.Head.ToString()))
+            {
+                var members = await _houseHoldService.ListHouseHoldMembersAsync(user.HouseHoldId);
+                if (members.Count > 0)
+                {
+                    TempData["Script"] = "CantLeave()";
+                    return RedirectToAction("Dashboard");
+                }
+                // delete household
+                var houseHold = await _context.HouseHold.FirstOrDefaultAsync(hh => hh.Id == user.HouseHoldId);
+                _context.HouseHold.Remove(houseHold);
+            }
+
+            // not in a house
+            user.HouseHoldId = null;
+
+            // reset role to New
+            var roles = await _userManager.GetRolesAsync(user);
+            await _userManager.RemoveFromRolesAsync(user, roles);
+            await _userManager.AddToRoleAsync(user, Roles.New.ToString());
+            await _context.SaveChangesAsync();
+
+            // sign out / sign in
+            await _signInManager.RefreshSignInAsync(user);
+            return RedirectToAction("Index", "Home");
+        }
 
         // GET: HouseHolds/Details/5
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -128,25 +132,121 @@ namespace MVCFinApp.Controllers
                 await _userManager.AddToRoleAsync(user, Roles.Head.ToString());
                 await _context.SaveChangesAsync();
 
-                // sign out/in
+                // sign out / sign in
                 await _signInManager.SignOutAsync();
                 await _signInManager.SignInAsync(user, isPersistent: false);
+
+                TempData["Script"] = "Wizard()";
                 return RedirectToAction(nameof(Dashboard));
             }
             return View(houseHold);
         }
 
-        public async Task<IActionResult> Dashboard()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SetUp(string bank, AccountType accountType, decimal startBalance,
+            string categoryName, string catDesc, string itemName, string itemDesc, decimal target)
         {
             var user = await _userManager.GetUserAsync(User);
+            var bankAccount = new BankAccount
+            {
+                HouseHoldId = (int)user.HouseHoldId,
+                FAUserId = user.Id,
+                Name = bank,
+                Type = accountType,
+                StartingBalance = startBalance,
+                CurrentBalance = startBalance
+            };
+            await _context.AddAsync(bankAccount);
+            await _context.SaveChangesAsync();
+
+            var category = new Category
+            {
+                HouseHoldId = (int)user.HouseHoldId,
+                Name = categoryName,
+                Description = catDesc
+            };
+            await _context.AddAsync(category);
+            await _context.SaveChangesAsync();
+
+            var item = new CategoryItem
+            {
+                CategoryId = category.Id,
+                Name = itemName,
+                Description = itemDesc,
+                TargetAmount = target,
+                ActualAmount = 0
+            };
+            await _context.AddAsync(item);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Dashboard");
+        }
+
+        [Authorize(Roles = "Administrator,Head,Member")]
+        public async Task<IActionResult> Dashboard(string year, string month)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var houseHold = await _context.HouseHold
+                .Include(hh => hh.BankAccounts).ThenInclude(ba => ba.Transactions).ThenInclude(t => t.BankAccount)
+                .Include(hh => hh.BankAccounts).ThenInclude(ba => ba.Transactions).ThenInclude(t => t.CategoryItem)
+                .Include(hh => hh.BankAccounts).ThenInclude(ba => ba.Transactions).ThenInclude(t => t.FAUser)
+                .FirstOrDefaultAsync(hh => hh.Id == user.HouseHoldId);
+
+            var transactions = _houseHoldService.ListTransactions(houseHold);
+
+            if (year != null)
+            {   // DateTime.Parse needs a valid date-time format
+                var _year = DateTime.Parse($"Jan 1, {year}").Year;
+                transactions = transactions.Where(t => t.Created.Year == _year).ToList();
+            }
+            if (month != null)
+            {   // DateTime.Parse needs a valid date-time format
+                var _month = DateTime.Parse($"{month} 1, 2009").Month;
+                transactions = transactions.Where(t => t.Created.Month == _month).ToList();
+            }
+
             var model = new HHDashboardVM
             {
-                Occupants = await _context.Users.Where(u => u.HouseHoldId == user.HouseHoldId).ToListAsync()
+                Occupants = await _context.Users.Where(u => u.HouseHoldId == user.HouseHoldId).ToListAsync(),
+                Accounts = houseHold.BankAccounts,
+                Transactions = transactions
             };
+
+            var categories = _context.Category
+                .Include(c => c.CategoryItems)
+                .Where(c => c.HouseHoldId == houseHold.Id).ToList();
+            var items = new List<CategoryItem>();
+            foreach (var category in categories)
+            {
+                foreach (var item in category.CategoryItems)
+                {
+                    items.Add(item);
+                }
+            }
+            var bankAccounts = _context.BankAccount.Where(ba => ba.HouseHoldId == houseHold.Id).ToList();
+
+            int oldestYear = int.Parse(_context.Transaction.OrderBy(t => t.Created).First().Created.Year.ToString());
+            int currentYear = int.Parse(DateTime.Now.Year.ToString());
+            var years = new List<string>();
+            while (currentYear >= oldestYear)
+            {
+                years.Add(currentYear.ToString());
+                currentYear -= 1;
+            }
+            var months = new List<string> { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+            ViewData["Years"] = new SelectList(years, year ?? DateTime.Now.Year.ToString());
+            ViewData["Months"] = new SelectList(months, month ?? DateTime.Now.Month.ToString());
+
+            ViewData["CategoryId"] = new SelectList(categories, "Id", "Name");
+            ViewData["BankAccountId"] = new SelectList(bankAccounts, "Id", "Name");
+            ViewData["CategoryItemId"] = new SelectList(items, "Id", "Name");
+
             return View(model);
         }
 
         // GET: HouseHolds/Edit/5
+        [Authorize(Roles = "Administrator,Head")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -165,6 +265,7 @@ namespace MVCFinApp.Controllers
         // POST: HouseHolds/Edit/5
         // To protect from over-posting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize(Roles = "Administrator,Head")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Greeting,Established")] HouseHold houseHold)
@@ -198,6 +299,7 @@ namespace MVCFinApp.Controllers
         }
 
         // GET: HouseHolds/Delete/5
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -216,6 +318,7 @@ namespace MVCFinApp.Controllers
         }
 
         // POST: HouseHolds/Delete/5
+        [Authorize(Roles = "Administrator,Head")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

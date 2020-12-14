@@ -24,13 +24,16 @@ namespace MVCFinApp.Controllers
             _userManager = userManager;
         }
 
+        [Authorize(Roles = "Administrator,Head,Member")]
         // GET: BankAccounts
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.BankAccount.Include(b => b.HouseHold).Include(u => u.FAUser);
+            var user = await _userManager.GetUserAsync(User);
+            var applicationDbContext = _context.BankAccount.Where(x => x.HouseHoldId == user.HouseHoldId).Include(b => b.HouseHold).Include(u => u.FAUser);
             return View(await applicationDbContext.ToListAsync());
         }
 
+        [Authorize(Roles = "Administrator,Head,Member")]
         // GET: BankAccounts/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -39,9 +42,11 @@ namespace MVCFinApp.Controllers
                 return NotFound();
             }
 
+            var user = await _userManager.GetUserAsync(User);
             var bankAccount = await _context.BankAccount
                 .Include(b => b.HouseHold)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(x => x.HouseHoldId == user.HouseHoldId && x.Id == id);
+
             if (bankAccount == null)
             {
                 return NotFound();
@@ -50,6 +55,7 @@ namespace MVCFinApp.Controllers
             return View(bankAccount);
         }
 
+        [Authorize(Roles = "Administrator,Head,Member")]
         // GET: BankAccounts/Create
         public async Task<IActionResult> Create()
         {
@@ -61,11 +67,13 @@ namespace MVCFinApp.Controllers
         // POST: BankAccounts/Create
         // To protect from over-posting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize(Roles = "Administrator,Head,Member")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,HouseHoldId,FAUserId,Name,Type,StartingBalance,CurrentBalance")] BankAccount bankAccount)
+        public async Task<IActionResult> Create([Bind("Id,HouseHoldId,FPUserId,Name,Type,StartingBalance,CurrentBalance")] BankAccount bankAccount)
         {
             bankAccount.FAUserId = _userManager.GetUserId(User);
+            bankAccount.CurrentBalance = bankAccount.StartingBalance;
             if (ModelState.IsValid)
             {
                 _context.Add(bankAccount);
@@ -77,6 +85,7 @@ namespace MVCFinApp.Controllers
         }
 
         // GET: BankAccounts/Edit/5
+        [Authorize(Roles = "Administrator,Head,Member")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -84,7 +93,9 @@ namespace MVCFinApp.Controllers
                 return NotFound();
             }
 
-            var bankAccount = await _context.BankAccount.FindAsync(id);
+            var user = await _userManager.GetUserAsync(User);
+            var bankAccount = await _context.BankAccount
+                .FirstOrDefaultAsync(x => x.HouseHoldId == user.HouseHoldId && x.Id == id);
             if (bankAccount == null)
             {
                 return NotFound();
@@ -94,11 +105,12 @@ namespace MVCFinApp.Controllers
         }
 
         // POST: BankAccounts/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
+        // To protect from over-posting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize(Roles = "Administrator,Head,Member")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,HouseHoldId,FAUserId,Name,Type,StartingBalance,CurrentBalance")] BankAccount bankAccount)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,HouseHoldId,FPUserId,Name,Type,StartingBalance,CurrentBalance")] BankAccount bankAccount)
         {
             if (id != bankAccount.Id)
             {
@@ -130,6 +142,7 @@ namespace MVCFinApp.Controllers
         }
 
         // GET: BankAccounts/Delete/5
+        [Authorize(Roles = "Administrator,Head,Member")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -137,9 +150,9 @@ namespace MVCFinApp.Controllers
                 return NotFound();
             }
 
+            var user = await _userManager.GetUserAsync(User);
             var bankAccount = await _context.BankAccount
-                .Include(b => b.HouseHold)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(x => x.HouseHoldId == user.HouseHoldId && x.Id == id);
             if (bankAccount == null)
             {
                 return NotFound();
@@ -149,6 +162,7 @@ namespace MVCFinApp.Controllers
         }
 
         // POST: BankAccounts/Delete/5
+        [Authorize(Roles = "Administrator,Head,Member")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -156,7 +170,7 @@ namespace MVCFinApp.Controllers
             var bankAccount = await _context.BankAccount.FindAsync(id);
             _context.BankAccount.Remove(bankAccount);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Dashboard", "HouseHolds");
         }
 
         private bool BankAccountExists(int id)

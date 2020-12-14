@@ -13,13 +13,14 @@ namespace MVCFinApp.Data
             : base(options)
         {
         }
-        public DbSet<MVCFinApp.Models.Attachment> Attachment { get; set; }
-        public DbSet<MVCFinApp.Models.BankAccount> BankAccount { get; set; }
-        public DbSet<MVCFinApp.Models.Category> Category { get; set; }
-        public DbSet<MVCFinApp.Models.CategoryItem> CategoryItem { get; set; }
-        public DbSet<MVCFinApp.Models.HouseHold> HouseHold { get; set; }
-        public DbSet<MVCFinApp.Models.Invitation> Invitation { get; set; }
-        public DbSet<MVCFinApp.Models.Notification> Notification { get; set; }
-        public DbSet<MVCFinApp.Models.Transaction> Transaction { get; set; }
+        public DbSet<Attachment> Attachment { get; set; }
+        public DbSet<BankAccount> BankAccount { get; set; }
+        public DbSet<Category> Category { get; set; }
+        public DbSet<CategoryItem> CategoryItem { get; set; }
+        public DbSet<HouseHold> HouseHold { get; set; }
+        public DbSet<Invitation> Invitation { get; set; }
+        public DbSet<Notification> Notification { get; set; }
+        public DbSet<Transaction> Transaction { get; set; }
+        public DbSet<History> History { get; set; }
     }
 }

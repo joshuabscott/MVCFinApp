@@ -1,7 +1,13 @@
 ﻿@model MVCFinApp.Models.BankAccount
+@using MVCFinApp.Data.Enums
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<FAUser> UserManager
+
+@model MVCFinApp.Models.BankAccount
 
 @{
     ViewData["Title"] = "Edit";
+    var user = await UserManager.GetUserAsync(User);
 }
 
 <h2>Edit</h2>
@@ -14,13 +20,17 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
             <div class="form-group">
-                <label asp-for="HouseHoldId" class="control-label"></label>
-                <select asp-for="HouseHoldId" class="form-control" asp-items="ViewBag.HouseHoldId"></select>
+                @*<label asp-for="HouseHoldId" class="control-label"></label>
+                <select asp-for="HouseHoldId" class="form-control" asp-items="ViewBag.HouseHoldId"></select>*@
+                <label asp-for="HouseHoldId" class="control-label" style="display:none;"></label>
+                <input type="hidden" asp-for="HouseHoldId" class="form-control" value="@user.HouseHoldId" />
                 <span asp-validation-for="HouseHoldId" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="FAUserId" class="control-label"></label>
-                <input asp-for="FAUserId" class="form-control" />
+                @*<label asp-for="FAUserId" class="control-label"></label>
+                <input asp-for="FAUserId" class="form-control" />*@
+                <label asp-for="FAUserId" class="control-label"  style="display:none;"></label>
+                <input type="hidden" asp-for="FAUserId" class="form-control" value="@user.Id" />
                 <span asp-validation-for="FAUserId" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -31,7 +41,8 @@
 
             <div class="form-group">
                 <label asp-for="Type" class="control-label"></label>
-                <select asp-for="Type" class="form-control"></select>
+                <select asp-for="Type" asp-items="Html.GetEnumSelectList<AccountType>()" class="form-control"></select>
+                @*<select asp-for="Type" class="form-control"></select>*@
                 @*<input asp-for="Type" class="form-control" />*@
                 <span asp-validation-for="Type" class="text-danger"></span>
             </div>
@@ -54,7 +65,7 @@
 </div>
 
 <div>
-    <a asp-action="Index">Back to List</a>
+    <a class="btn btn-info"  asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {

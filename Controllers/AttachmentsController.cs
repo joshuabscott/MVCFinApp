@@ -22,6 +22,7 @@ namespace MVCFinApp.Controllers
         }
 
         // GET: Attachments
+        [Authorize(Roles = "Administrator,Head")]
         public async Task<IActionResult> Index()
         {
             var applicationDbContext = _context.Attachment.Include(a => a.HouseHold);
@@ -29,6 +30,7 @@ namespace MVCFinApp.Controllers
         }
 
         // GET: Attachments/Details/5
+        [Authorize(Roles = "Administrator,Head")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -48,9 +50,10 @@ namespace MVCFinApp.Controllers
         }
 
         // GET: Attachments/Create
+        [Authorize(Roles = "Administrator,Head")]
         public IActionResult Create()
         {
-            ViewData["HouseHoldId"] = new SelectList(_context.HouseHold, "Id", "Name");
+            ViewData["HouseHoldId"] = new SelectList(_context.Set<HouseHold>(), "Id", "Name");
             return View();
         }
 
@@ -59,6 +62,7 @@ namespace MVCFinApp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Head,Member")]
         public async Task<IActionResult> Create([Bind("Id,HouseHoldId,FileName,Description,ContentType,FileData")] Attachment attachment)
         {
             if (ModelState.IsValid)
@@ -67,11 +71,12 @@ namespace MVCFinApp.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["HouseHoldId"] = new SelectList(_context.HouseHold, "Id", "Name", attachment.HouseHoldId);
+            ViewData["HouseHoldId"] = new SelectList(_context.Set<HouseHold>(), "Id", "Name", attachment.HouseHoldId);
             return View(attachment);
         }
 
         // GET: Attachments/Edit/5
+        [Authorize(Roles = "Administrator,Head,Member")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -84,15 +89,16 @@ namespace MVCFinApp.Controllers
             {
                 return NotFound();
             }
-            ViewData["HouseHoldId"] = new SelectList(_context.HouseHold, "Id", "Name", attachment.HouseHoldId);
+            ViewData["HouseHoldId"] = new SelectList(_context.Set<HouseHold>(), "Id", "Name", attachment.HouseHoldId);
             return View(attachment);
         }
 
         // POST: Attachments/Edit/5
-        // To protect from over-posting attacks, enable the specific properties you want to bind to, for 
+        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Head,Member")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,HouseHoldId,FileName,Description,ContentType,FileData")] Attachment attachment)
         {
             if (id != attachment.Id)
@@ -120,11 +126,12 @@ namespace MVCFinApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["HouseHoldId"] = new SelectList(_context.HouseHold, "Id", "Name", attachment.HouseHoldId);
+            ViewData["HouseHoldId"] = new SelectList(_context.Set<HouseHold>(), "Id", "Name", attachment.HouseHoldId);
             return View(attachment);
         }
 
         // GET: Attachments/Delete/5
+        [Authorize(Roles = "Administrator,Head")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -146,6 +153,7 @@ namespace MVCFinApp.Controllers
         // POST: Attachments/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Head")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var attachment = await _context.Attachment.FindAsync(id);

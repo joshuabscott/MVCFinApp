@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -15,20 +16,27 @@ namespace MVCFinApp.Controllers
     public class CategoriesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<FAUser> _userManager;
 
-        public CategoriesController(ApplicationDbContext context)
+        public CategoriesController(ApplicationDbContext context, UserManager<FAUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Categories
+        [Authorize(Roles = "Administrator,Head,Member")]
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Category.Include(c => c.HouseHold);
+            var user = await _userManager.GetUserAsync(User);
+            var applicationDbContext = _context.Category
+                .Where(x => x.HouseHoldId == user.HouseHoldId)
+                .Include(c => c.HouseHold);
             return View(await applicationDbContext.ToListAsync());
         }
 
         // GET: Categories/Details/5
+        [Authorize(Roles = "Administrator,Head,Member")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -36,8 +44,10 @@ namespace MVCFinApp.Controllers
                 return NotFound();
             }
 
+            var user = await _userManager.GetUserAsync(User);
             var category = await _context.Category
                 .Include(c => c.HouseHold)
+                .Where(x => x.HouseHoldId == user.HouseHoldId)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (category == null)
             {
@@ -48,9 +58,9 @@ namespace MVCFinApp.Controllers
         }
 
         // GET: Categories/Create
+        [Authorize(Roles = "Administrator,Head,Member")]
         public IActionResult Create()
         {
-            ViewData["HouseHoldId"] = new SelectList(_context.Set<HouseHold>(), "Id", "Name");
             return View();
         }
 
@@ -59,19 +69,21 @@ namespace MVCFinApp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Head,Member")]
         public async Task<IActionResult> Create([Bind("Id,HouseHoldId,Name,Description")] Category category)
         {
             if (ModelState.IsValid)
             {
                 _context.Add(category);
                 await _context.SaveChangesAsync();
+                TempData["Script"] = $"NewColor('{category.Name}')";
                 return RedirectToAction("Dashboard", "HouseHolds");
             }
-            ViewData["HouseHoldId"] = new SelectList(_context.Set<HouseHold>(), "Id", "Name", category.HouseHoldId);
             return View(category);
         }
 
         // GET: Categories/Edit/5
+        [Authorize(Roles = "Administrator,Head,Member")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -79,12 +91,14 @@ namespace MVCFinApp.Controllers
                 return NotFound();
             }
 
-            var category = await _context.Category.FindAsync(id);
+            var user = await _userManager.GetUserAsync(User);
+            var category = await _context.Category
+                .Where(x => x.HouseHoldId == user.HouseHoldId)
+                .FirstOrDefaultAsync(x => x.Id == id);
             if (category == null)
             {
                 return NotFound();
             }
-            ViewData["HouseHoldId"] = new SelectList(_context.Set<HouseHold>(), "Id", "Name", category.HouseHoldId);
             return View(category);
         }
 
@@ -93,6 +107,7 @@ namespace MVCFinApp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Head,Member")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,HouseHoldId,Name,Description")] Category category)
         {
             if (id != category.Id)
@@ -120,11 +135,11 @@ namespace MVCFinApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["HouseHoldId"] = new SelectList(_context.Set<HouseHold>(), "Id", "Name", category.HouseHoldId);
             return View(category);
         }
 
         // GET: Categories/Delete/5
+        [Authorize(Roles = "Administrator,Head,Member")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -132,9 +147,11 @@ namespace MVCFinApp.Controllers
                 return NotFound();
             }
 
+            var user = await _userManager.GetUserAsync(User);
             var category = await _context.Category
                 .Include(c => c.HouseHold)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .Where(x => x.HouseHoldId == user.HouseHoldId)
+                .FirstOrDefaultAsync(x => x.Id == id);
             if (category == null)
             {
                 return NotFound();
@@ -146,6 +163,7 @@ namespace MVCFinApp.Controllers
         // POST: Categories/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Head,Member")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var category = await _context.Category.FindAsync(id);

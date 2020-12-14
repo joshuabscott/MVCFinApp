@@ -20,28 +20,27 @@ namespace MVCFinApp.Controllers
     public class NotificationsController : Controller
     {
         private readonly ApplicationDbContext _context;
-        //private readonly SignInManager<FAUser> _signInManager;
-        //private readonly UserManager<FAUser> _userManager;
-        //private readonly IAvatarService _fileService;
-        //private readonly IEmailSender _emailService;
+        private readonly UserManager<FAUser> _userManager;
 
-        public NotificationsController(ApplicationDbContext context/*, SignInManager<FAUser> signInManager, UserManager<FAUser> userManager, IAvatarService fileService, IEmailSender emailService*/)
+        public NotificationsController(ApplicationDbContext context, UserManager<FAUser> userManager)
         {
             _context = context;
-            //_signInManager = signInManager;
-            //_userManager = userManager;
-            //_fileService = fileService;
-            //_emailService = emailService;
+            _userManager = userManager;
         }
 
         // GET: Notifications
+        [Authorize(Roles = "Administrator,Head")]
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Notification.Include(n => n.HouseHold);
+            var user = await _userManager.GetUserAsync(User);
+            var applicationDbContext = _context.Notification
+                .Where(x => x.HouseHoldId == user.HouseHoldId)
+                .Include(n => n.HouseHold);
             return View(await applicationDbContext.ToListAsync());
         }
 
         // GET: Notifications/Details/5
+        [Authorize(Roles = "Administrator,Head")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -49,21 +48,25 @@ namespace MVCFinApp.Controllers
                 return NotFound();
             }
 
+            var user = await _userManager.GetUserAsync(User);
             var notification = await _context.Notification
                 .Include(n => n.HouseHold)
+                .Where(x => x.HouseHoldId == user.HouseHoldId)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (notification == null)
             {
                 return NotFound();
             }
-
+            notification.IsRead = true;
+            _context.Update(notification);
+            await _context.SaveChangesAsync();
             return View(notification);
         }
 
         // GET: Notifications/Create
+        [Authorize(Roles = "Administrator")]
         public IActionResult Create()
         {
-            ViewData["HouseHoldId"] = new SelectList(_context.HouseHold, "Id", "Name");
             return View();
         }
 
@@ -72,6 +75,7 @@ namespace MVCFinApp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Head")]
         public async Task<IActionResult> Create([Bind("Id,HouseHoldId,Created,Subject,Body,IsRead")] Notification notification)
         {
             if (ModelState.IsValid)
@@ -80,64 +84,11 @@ namespace MVCFinApp.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["HouseHoldId"] = new SelectList(_context.HouseHold, "Id", "Name", notification.HouseHoldId);
-            return View(notification);
-        }
-
-        // GET: Notifications/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var notification = await _context.Notification.FindAsync(id);
-            if (notification == null)
-            {
-                return NotFound();
-            }
-            ViewData["HouseHoldId"] = new SelectList(_context.HouseHold, "Id", "Name", notification.HouseHoldId);
-            return View(notification);
-        }
-
-        // POST: Notifications/Edit/5
-        // To protect from over-posting attacks, enable the specific properties you want to bind to, for 
-        // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,HouseHoldId,Created,Subject,Body,IsRead")] Notification notification)
-        {
-            if (id != notification.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(notification);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!NotificationExists(notification.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["HouseHoldId"] = new SelectList(_context.HouseHold, "Id", "Name", notification.HouseHoldId);
             return View(notification);
         }
 
         // GET: Notifications/Delete/5
+        [Authorize(Roles = "Administrator,Head")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -145,8 +96,10 @@ namespace MVCFinApp.Controllers
                 return NotFound();
             }
 
+            var user = await _userManager.GetUserAsync(User);
             var notification = await _context.Notification
                 .Include(n => n.HouseHold)
+                .Where(x => x.HouseHoldId == user.HouseHoldId)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (notification == null)
             {
@@ -159,6 +112,7 @@ namespace MVCFinApp.Controllers
         // POST: Notifications/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Head")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var notification = await _context.Notification.FindAsync(id);

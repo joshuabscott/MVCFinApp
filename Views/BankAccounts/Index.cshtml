@@ -7,7 +7,7 @@
 <h2>Bank Account</h2>
 
 <p>
-    <a asp-action="Create" class="btn btn-primary">Add Account</a>
+    <a asp-action="Create" class="btn btn-primary">Add New Account</a>
 </p>
 <table class="table">
     <thead>
@@ -16,7 +16,8 @@
                 @Html.DisplayNameFor(model => model.HouseHold)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.FAUserId)
+                @*@Html.DisplayNameFor(model => model.FAUserId)*@
+                User
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Name)
@@ -40,7 +41,7 @@
                 @Html.DisplayFor(modelItem => item.HouseHold.Name)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.FAUserId)
+                @Html.DisplayFor(modelItem => item.FAUser.FullName)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Name)
@@ -55,9 +56,10 @@
                 @Html.DisplayFor(modelItem => item.CurrentBalance)
             </td>
             <td>
-                <a asp-action="Edit" class="btn btn-primary" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details"  class="btn btn-primary" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" class="btn btn-primary" asp-route-id="@item.Id">Delete</a>
+                <a class="btn btn-primary" asp-controller="Transactions" asp-action="Transactions" asp-route-id="@item.Id">Transactions</a> 
+                <a class="btn btn-primary" asp-action="Edit" class="btn btn-primary" asp-route-id="@item.Id">Edit</a> 
+                <a class="btn btn-primary" asp-action="Details" class="btn btn-primary" asp-route-id="@item.Id">Details</a> 
+                <a class="btn btn-danger" asp-action="Delete" class="btn btn-primary" asp-route-id="@item.Id">Delete</a>
             </td>
         </tr>
 }

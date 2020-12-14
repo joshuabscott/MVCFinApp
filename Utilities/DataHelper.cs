@@ -16,7 +16,6 @@ namespace MVCFinApp.Utilities
 {
     public class DataHelper
     {
-
         public static string GetConnectionString(IConfiguration configuration)
         {
             var connectionString = configuration.GetConnectionString("DefaultConnection");

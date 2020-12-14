@@ -16,8 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Services\HouseHoldService.cs" />
-    <Compile Remove="Services\IHouseHoldService.cs" />
+    <Content Remove="Views\Notifications\Edit.cshtml" />
   </ItemGroup>
 
   <ItemGroup>

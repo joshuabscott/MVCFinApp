@@ -1,4 +1,5 @@
 ﻿@model IEnumerable<MVCFinApp.Models.Notification>
+@using MVCFinApp.Data.Enums
 
 @{
     ViewData["Title"] = "Index";
@@ -7,9 +8,12 @@
 <h2>Index</h2>
 <h1 class="mt-3">Index</h1>
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Create New Notification</a>
-</p>
+@if (User.IsInRole(Roles.Administrator.ToString()))
+{
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Create New Notification</a>
+    </p>
+}
 <table class="table">
     <thead>
         <tr>
@@ -32,29 +36,31 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.HouseHold.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Created)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Subject)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Body)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsRead)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.HouseHold.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Created)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Subject)
+                </td>
+                <td>
+                    @*@Html.DisplayFor(modelItem => item.Body)*@
+                    @Html.Raw(item.Body)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.IsRead)
+                </td>
+                <td>
+                    @*<a asp-action="Edit" asp-route-id="@item.Id">Edit</a>*@ 
+                    <a class="btn btn-primary" asp-action="Details" asp-route-id="@item.Id">Details</a> 
+                    <a class="btn btn-danger" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>

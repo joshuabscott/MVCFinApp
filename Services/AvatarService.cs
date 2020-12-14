@@ -11,6 +11,7 @@ namespace MVCFinApp.Services
 {
     public class AvatarService : IAvatarService
     {
+        //Go to DefaultSettings Model for Avatar
         private readonly DefaultSettings _defaultSettings;
         public AvatarService(IOptions<DefaultSettings> defaultSettings)
         {

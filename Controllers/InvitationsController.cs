@@ -21,21 +21,22 @@ namespace MVCFinApp.Controllers
     public class InvitationsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IEmailSender _emailService;
         private readonly SignInManager<FAUser> _signInManager;
         private readonly UserManager<FAUser> _userManager;
         private readonly IAvatarService _fileService;
-        private readonly IEmailSender _emailService;
 
-        public InvitationsController(ApplicationDbContext context, SignInManager<FAUser> signInManager, UserManager<FAUser> userManager, IAvatarService fileService, IEmailSender emailService)
+        public InvitationsController(ApplicationDbContext context, IEmailSender emailService, SignInManager<FAUser> signInManager, UserManager<FAUser> userManager, IAvatarService fileService)
         {
             _context = context;
+            _emailService = emailService;
             _signInManager = signInManager;
             _userManager = userManager;
             _fileService = fileService;
-            _emailService = emailService;
         }
 
         // GET: Invitations
+        [Authorize(Roles = "Administrator,Head")]
         public async Task<IActionResult> Index()
         {
             var applicationDbContext = _context.Invitation.Include(i => i.HouseHold);
@@ -43,6 +44,7 @@ namespace MVCFinApp.Controllers
         }
 
         // GET: Invitations/Details/5
+        [Authorize(Roles = "Administrator,Head")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -79,11 +81,7 @@ namespace MVCFinApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                //first try
-                //_context.Add(invitation);
-                //await _context.SaveChangesAsync();
-
-                //1. we do not want to send an invite if user is already a member of house hold
+                // prevent inviting user already in household
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == invitation.EmailTo);
                 if (user != null && user.HouseHoldId != null)
                 {
@@ -91,25 +89,27 @@ namespace MVCFinApp.Controllers
                     return RedirectToAction("Dashboard", "HouseHolds");
                 }
 
-                //2. this will create the record of the invitation
+                // create invitation record
                 _context.Add(invitation);
                 await _context.SaveChangesAsync();
 
-                // 3.build the email to be sent as the invitation body
+                // construct email
                 var acceptUrl = Url.Action("Accept", "Invitations", new { email = invitation.EmailTo, code = invitation.Code }, protocol: Request.Scheme);
                 var declineUrl = Url.Action("Decline", "Invitations", new { code = invitation.Code }, protocol: Request.Scheme);
                 string houseHoldName = (await _context.HouseHold.FirstOrDefaultAsync(hh => hh.Id == invitation.HouseHoldId)).Name;
                 var emailBody =
                     $"<h3>You are invited to join the <em>{houseHoldName}</em> household.</h3>" +
-                    $"<h6>{invitation.Body}</h6><br/>" +
-                    $"<a href='{HtmlEncoder.Default.Encode(acceptUrl)}'>Accept</a>" +
-                    $" Or " +
-                    $"<a href='{HtmlEncoder.Default.Encode(declineUrl)}'> Deny</a>.";
+                    $"<p>{invitation.Body}</p>" +
+                    $"<p>If you already have an account you can copy and paste this code when you click to 'join'</p>" +
+                    $"<b>{invitation.Code.ToString().ToUpper()}</b></p><br />" +
+                    $"<p>Or click <a href='{HtmlEncoder.Default.Encode(acceptUrl)}'>Accept</a>" +
+                    $" or " +
+                    $"<a href='{HtmlEncoder.Default.Encode(declineUrl)}'> Deny</a>.</p>";
 
-                // 4.send the email to invite the user to become a member
+                // send email
                 await _emailService.SendEmailAsync(invitation.EmailTo, invitation.Subject, emailBody);
 
-                //5. Alert
+                // sweet alert
                 TempData["Script"] = "CanInvite()";
                 return RedirectToAction("Dashboard", "HouseHolds");
             }
@@ -120,11 +120,8 @@ namespace MVCFinApp.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Accept(string email, string code)
         {
-            // ensure signed out
-            await _signInManager.SignOutAsync();
-
             // validate invitation
-            var invitation = await _context.Invitation.FirstOrDefaultAsync(i => i.Code.ToString() == code);
+            var invitation = await _context.Invitation.FirstOrDefaultAsync(i => i.Code.ToString() == code.ToLower());
             if (invitation == null || invitation.Accepted == true || DateTime.Now > invitation.Expires)
             {
                 return NotFound();
@@ -179,7 +176,9 @@ namespace MVCFinApp.Controllers
                 EmailConfirmed = true
             };
             invitation.Accepted = true;
-            var result = await _userManager.CreateAsync(user, password);
+            // where the magic happens
+            await _userManager.CreateAsync(user, password);
+
             await _userManager.AddToRoleAsync(user, Roles.Member.ToString());
             await _signInManager.SignInAsync(user, false);
             await _context.SaveChangesAsync();
@@ -205,6 +204,7 @@ namespace MVCFinApp.Controllers
         }
 
         // GET: Invitations/Edit/5
+        [Authorize(Roles = "Administrator,Head")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -226,6 +226,7 @@ namespace MVCFinApp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Head")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,HouseHoldId,Created,Expires,Accepted,EmailTo,Subject,Body,Code")] Invitation invitation)
         {
             if (id != invitation.Id)
@@ -258,6 +259,7 @@ namespace MVCFinApp.Controllers
         }
 
         // GET: Invitations/Delete/5
+        [Authorize(Roles = "Administrator,Head")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -277,6 +279,7 @@ namespace MVCFinApp.Controllers
         }
 
         // POST: Invitations/Delete/5
+        [Authorize(Roles = "Administrator,Head")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

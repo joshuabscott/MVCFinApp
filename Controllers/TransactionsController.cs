@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MVCFinApp.Data;
 using MVCFinApp.Models;
+using MVCFinApp.Services;
 
 namespace MVCFinApp.Controllers
 {
@@ -17,21 +18,42 @@ namespace MVCFinApp.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<FAUser> _userManager;
+        private readonly INotificationService _notificationService;
 
-        public TransactionsController(ApplicationDbContext context, UserManager<FAUser> userManager)
+        public TransactionsController(ApplicationDbContext context, UserManager<FAUser> userManager, INotificationService notificationService)
         {
             _context = context;
             _userManager = userManager;
+            _notificationService = notificationService;
         }
 
         // GET: Transactions
+        [Authorize(Roles = "Administrator,Head,Member")]
         public async Task<IActionResult> Index()
         {
             var applicationDbContext = _context.Transaction.Include(t => t.BankAccount).Include(t => t.CategoryItem).Include(t => t.FAUser);
             return View(await applicationDbContext.ToListAsync());
         }
 
+        // GET: Transactions
+        [Authorize(Roles = "Administrator,Head,Member")]
+        public async Task<IActionResult> Transactions(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var bankAccount = await _context.BankAccount
+                .Include(ba => ba.Transactions).ThenInclude(t => t.CategoryItem)
+                .Include(ba => ba.Transactions).ThenInclude(t => t.FAUser)
+                .FirstOrDefaultAsync(x => x.HouseHoldId == user.HouseHoldId && x.Id == id);
+            if (bankAccount == null)
+            {
+                return NotFound();
+            }
+
+            return View("Index", bankAccount.Transactions);
+        }
+
         // GET: Transactions/Details/5
+        [Authorize(Roles = "Administrator,Head,Member")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -53,11 +75,12 @@ namespace MVCFinApp.Controllers
         }
 
         // GET: Transactions/Create
+        [Authorize(Roles = "Administrator,Head,Member")]
         public IActionResult Create()
         {
             ViewData["BankAccountId"] = new SelectList(_context.BankAccount, "Id", "Name");
             ViewData["CategoryItemId"] = new SelectList(_context.CategoryItem, "Id", "Name");
-            ViewData["FAUserId"] = new SelectList(_context.Users, "Id", "FullName");
+            ViewData["FPUserId"] = new SelectList(_context.Users, "Id", "FullName");
             return View();
         }
 
@@ -66,22 +89,78 @@ namespace MVCFinApp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,CategoryItemId,BankAccountId,FAUserId,Created,Type,Memo,Amount,IsDeleted")] Transaction transaction)
+        [Authorize(Roles = "Administrator,Head,Member")]
+        public async Task<IActionResult> Create([Bind("Id,CategoryItemId,BankAccountId,FPUserId,Created,Type,Memo,Amount,IsDeleted")] Transaction transaction)
         {
             transaction.FAUserId = _userManager.GetUserId(User);
+            var bankAccount = await _context.BankAccount.Include(ba => ba.Transactions).ThenInclude(t => t.CategoryItem).FirstOrDefaultAsync(ba => ba.Id == transaction.BankAccountId);
+            var categoryItem = await _context.CategoryItem.FirstOrDefaultAsync(ci => ci.Id == transaction.CategoryItemId);
             if (ModelState.IsValid)
             {
+                if (transaction.Type == TransactionType.Debit)
+                {
+                    bankAccount.CurrentBalance += transaction.Amount;
+                }
+                else if (transaction.Type == TransactionType.Credit)
+                {
+                    bankAccount.CurrentBalance -= transaction.Amount;
+                    if (categoryItem == null)
+                    {
+                        return NotFound();
+                    }
+                    categoryItem.ActualAmount += transaction.Amount;
+                    _context.Update(categoryItem);
+                }
+
+                // so that only one history per day
+                var history = await _context.History.FirstOrDefaultAsync(h => h.BankAccount == bankAccount && h.Date.Day == transaction.Created.Day);
+                if (history == null)
+                {
+                    History _history = new History
+                    {
+                        BankAccountId = transaction.BankAccountId,
+                        Balance = (decimal)bankAccount.CurrentBalance,
+                        Date = transaction.Created
+                    };
+                    _context.Add(_history);
+                }
+                else
+                {
+                    history.BankAccountId = transaction.BankAccountId;
+                    history.Balance = (decimal)bankAccount.CurrentBalance;
+                    history.Date = transaction.Created;
+                    _context.Update(history);
+                }
+
                 _context.Add(transaction);
+                _context.Update(bankAccount);
                 await _context.SaveChangesAsync();
+
+                if (bankAccount.CurrentBalance < 0)
+                {
+                    await _notificationService.NotifyOverdraft(transaction.FAUserId, bankAccount);
+                    TempData["Script"] = "Overdraft()";
+                }
+
                 return RedirectToAction("Dashboard", "HouseHolds");
             }
-            ViewData["BankAccountId"] = new SelectList(_context.BankAccount, "Id", "Id", transaction.BankAccountId);
-            ViewData["CategoryItemId"] = new SelectList(_context.CategoryItem, "Id", "Id", transaction.CategoryItemId);
-            ViewData["FAUserId"] = new SelectList(_context.Users, "Id", "Id", transaction.FAUserId);
+
+            var user = await _userManager.GetUserAsync(User);
+            var houseHold = await _context.HouseHold
+                .Include(hh => hh.BankAccounts).ThenInclude(ba => ba.Transactions)
+                .Include(hh => hh.Categories)
+                .ThenInclude(c => c.CategoryItems)
+                .FirstOrDefaultAsync(hh => hh.Id == user.HouseHoldId);
+            var banks = houseHold.BankAccounts;
+            var items = houseHold.Categories.SelectMany(c => c.CategoryItems).ToList();
+
+            ViewData["BankAccountId"] = new SelectList(banks, "Id", "Name", transaction.BankAccountId);
+            ViewData["CategoryItemId"] = new SelectList(items, "Id", "Name", transaction.CategoryItemId);
             return View(transaction);
         }
 
         // GET: Transactions/Edit/5
+        [Authorize(Roles = "Administrator,Head,Member")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -96,7 +175,7 @@ namespace MVCFinApp.Controllers
             }
             ViewData["BankAccountId"] = new SelectList(_context.BankAccount, "Id", "Id", transaction.BankAccountId);
             ViewData["CategoryItemId"] = new SelectList(_context.CategoryItem, "Id", "Id", transaction.CategoryItemId);
-            ViewData["FAUserId"] = new SelectList(_context.Users, "Id", "Id", transaction.FAUserId);
+            ViewData["FPUserId"] = new SelectList(_context.Users, "Id", "Id", transaction.FAUserId);
             return View(transaction);
         }
 
@@ -105,7 +184,8 @@ namespace MVCFinApp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,CategoryItemId,BankAccountId,FAUserId,Created,Type,Memo,Amount,IsDeleted")] Transaction transaction)
+        [Authorize(Roles = "Administrator,Head,Member")]
+        public async Task<IActionResult> Edit(int id, [Bind("Id,CategoryItemId,BankAccountId,FPUserId,Created,Type,Memo,Amount,IsDeleted")] Transaction transaction)
         {
             if (id != transaction.Id)
             {
@@ -116,6 +196,7 @@ namespace MVCFinApp.Controllers
             {
                 try
                 {
+                    transaction.FAUserId = _userManager.GetUserId(User);
                     _context.Update(transaction);
                     await _context.SaveChangesAsync();
                 }
@@ -130,15 +211,16 @@ namespace MVCFinApp.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Dashboard", "HouseHolds");
             }
             ViewData["BankAccountId"] = new SelectList(_context.BankAccount, "Id", "Id", transaction.BankAccountId);
             ViewData["CategoryItemId"] = new SelectList(_context.CategoryItem, "Id", "Id", transaction.CategoryItemId);
-            ViewData["FAUserId"] = new SelectList(_context.Users, "Id", "Id", transaction.FAUserId);
+            ViewData["FPUserId"] = new SelectList(_context.Users, "Id", "Id", transaction.FAUserId);
             return View(transaction);
         }
 
         // GET: Transactions/Delete/5
+        [Authorize(Roles = "Administrator,Head,Member")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -162,12 +244,13 @@ namespace MVCFinApp.Controllers
         // POST: Transactions/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Head,Member")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var transaction = await _context.Transaction.FindAsync(id);
             _context.Transaction.Remove(transaction);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Dashboard", "HouseHolds");
         }
 
         private bool TransactionExists(int id)
