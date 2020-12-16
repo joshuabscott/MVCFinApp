@@ -7,7 +7,7 @@ using MVCFinApp.Models;
 
 namespace MVCFinApp.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<FAUser> //this needs to be here to fix error, mapping over
+    public class ApplicationDbContext : IdentityDbContext<FAUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)

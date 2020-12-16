@@ -18,13 +18,13 @@ namespace MVCFinApp.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<FAUser> _userManager;
-        private readonly INotificationService _notificationService;
+        //private readonly INotificationService _notificationService;
 
-        public TransactionsController(ApplicationDbContext context, UserManager<FAUser> userManager, INotificationService notificationService)
+        public TransactionsController(ApplicationDbContext context, UserManager<FAUser> userManager/*, INotificationService notificationService*/)
         {
             _context = context;
             _userManager = userManager;
-            _notificationService = notificationService;
+            //_notificationService = notificationService;
         }
 
         // GET: Transactions
@@ -90,7 +90,7 @@ namespace MVCFinApp.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Administrator,Head,Member")]
-        public async Task<IActionResult> Create([Bind("Id,CategoryItemId,BankAccountId,FPUserId,Created,Type,Memo,Amount,IsDeleted")] Transaction transaction)
+        public async Task<IActionResult> Create([Bind("Id,CategoryItemId,BankAccountId,FAUserId,Created,Type,Memo,Amount,IsDeleted")] Transaction transaction)
         {
             transaction.FAUserId = _userManager.GetUserId(User);
             var bankAccount = await _context.BankAccount.Include(ba => ba.Transactions).ThenInclude(t => t.CategoryItem).FirstOrDefaultAsync(ba => ba.Id == transaction.BankAccountId);
@@ -138,7 +138,7 @@ namespace MVCFinApp.Controllers
 
                 if (bankAccount.CurrentBalance < 0)
                 {
-                    await _notificationService.NotifyOverdraft(transaction.FAUserId, bankAccount);
+                    //await _notificationService.NotifyOverdraft(transaction.FAUserId, bankAccount);
                     TempData["Script"] = "Overdraft()";
                 }
 
@@ -185,7 +185,7 @@ namespace MVCFinApp.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Administrator,Head,Member")]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,CategoryItemId,BankAccountId,FPUserId,Created,Type,Memo,Amount,IsDeleted")] Transaction transaction)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,CategoryItemId,BankAccountId,FAUserId,Created,Type,Memo,Amount,IsDeleted")] Transaction transaction)
         {
             if (id != transaction.Id)
             {

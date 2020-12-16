@@ -16,6 +16,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\ChartsController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="Views\Notifications\Edit.cshtml" />
   </ItemGroup>
 

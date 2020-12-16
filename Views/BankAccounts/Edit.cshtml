@@ -3,8 +3,6 @@
 @using Microsoft.AspNetCore.Identity
 @inject UserManager<FAUser> UserManager
 
-@model MVCFinApp.Models.BankAccount
-
 @{
     ViewData["Title"] = "Edit";
     var user = await UserManager.GetUserAsync(User);

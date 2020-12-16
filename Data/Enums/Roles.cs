@@ -5,9 +5,6 @@ using System.Threading.Tasks;
 
 namespace MVCFinApp.Data.Enums
 {
-    //public class Roles
-    //{
-    //}
     public enum Roles
     {
         Administrator,

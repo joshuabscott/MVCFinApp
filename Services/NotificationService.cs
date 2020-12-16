@@ -20,6 +20,7 @@ namespace MVCFinApp.Services
             _emailService = emailService;
         }
 
+        //Error?
         public async Task NotifyOverdraft(string userId, BankAccount bankAccount)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
@@ -42,6 +43,7 @@ namespace MVCFinApp.Services
             await _context.SaveChangesAsync();
         }
 
+        //Error?
         public async Task<List<Notification>> GetNotificationsAsync(string userId)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);

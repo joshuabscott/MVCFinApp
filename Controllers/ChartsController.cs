@@ -72,7 +72,7 @@ namespace MVCFinApp.Controllers
             return Json(list);
         }
 
-        //[Authorize(Roles = "Admin,Head,Member")]
+        //[Authorize(Roles = "Administrator,Head,Member")]
         public async Task<JsonResult> History()
         {
             var user = await _userManager.GetUserAsync(User);

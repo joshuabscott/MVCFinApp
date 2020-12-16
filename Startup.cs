@@ -53,7 +53,7 @@ namespace MVCFinApp
 
             //5. Notification and Household Services
             services.AddScoped<IHouseHoldService, HouseHoldService>();
-            services.AddScoped<INotificationService, NotificationService>();
+            //services.AddScoped<INotificationService, NotificationService>();
 
             //Default Scaffold for Razor Pages
             services.AddControllersWithViews();

@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using MVCFinApp.Models;
-using Microsoft.Extensions.Configuration;
 
 namespace MVCFinApp.Areas.Identity.Pages.Account
 {
@@ -20,14 +19,14 @@ namespace MVCFinApp.Areas.Identity.Pages.Account
     public class LoginModel : PageModel
     {
         private readonly UserManager<FAUser> _userManager;
-        private readonly IConfiguration _configuration;
         private readonly SignInManager<FAUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(SignInManager<FAUser> signInManager, IConfiguration configuration, ILogger<LoginModel> logger, UserManager<FAUser> userManager)
+        public LoginModel(SignInManager<FAUser> signInManager,
+            ILogger<LoginModel> logger,
+            UserManager<FAUser> userManager)
         {
             _userManager = userManager;
-            _configuration = configuration;
             _signInManager = signInManager;
             _logger = logger;
         }
